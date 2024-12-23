@@ -85,7 +85,7 @@ export default {
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "hero-pattern": "linear-gradient(to right bottom, rgba(67, 56, 202, 0.12), rgba(147, 51, 234, 0.12))",
+        "hero-pattern": "linear-gradient(to right bottom, rgba(37,17,61,0.12), rgba(147, 51, 234, 0.12))",
       },
     },
   },
