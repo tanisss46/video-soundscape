@@ -34,6 +34,9 @@ const AuthPage = () => {
                   colors: {
                     brand: '#7b22b4',
                     brandAccent: '#6c1d9e',
+                    inputBackground: '#f1f1f1',
+                    inputText: '#000000',
+                    inputPlaceholder: '#666666',
                   },
                 },
               },
