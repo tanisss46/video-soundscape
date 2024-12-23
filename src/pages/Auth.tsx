@@ -44,7 +44,7 @@ const AuthPage = () => {
               },
             }}
             providers={["github", "google"]}
-            redirectTo={`${window.location.origin}/auth/callback`}
+            redirectTo="http://localhost:5173/auth/callback"
             onlyThirdPartyProviders={false}
             view="sign_in"
           />
