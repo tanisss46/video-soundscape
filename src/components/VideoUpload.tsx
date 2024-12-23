@@ -1,25 +1,15 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useDropzone } from "react-dropzone";
+import { DropZone } from "./upload/DropZone";
+import { PromptInput } from "./upload/PromptInput";
+import { UploadButton } from "./upload/UploadButton";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [prompt, setPrompt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'video/*': [] },
-    maxFiles: 1,
-    onDrop: (acceptedFiles) => {
-      setFile(acceptedFiles[0]);
-    }
-  });
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,43 +68,9 @@ export const VideoUpload = () => {
 
   return (
     <form onSubmit={handleUpload} className="space-y-6">
-      <div 
-        {...getRootProps()} 
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-          ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
-      >
-        <input {...getInputProps()} />
-        {file ? (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Selected file:</p>
-            <p className="text-sm text-muted-foreground">{file.name}</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">
-              {isDragActive ? "Drop the video here" : "Drag & drop a video here"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              or click to select a file
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="prompt">Prompt (Optional)</Label>
-        <Textarea
-          id="prompt"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter a prompt for the AI to generate sound effects"
-          rows={4}
-        />
-      </div>
-
-      <Button type="submit" disabled={isUploading} className="w-full">
-        {isUploading ? "Processing..." : "Add Sound Effect"}
-      </Button>
+      <DropZone file={file} setFile={setFile} />
+      <PromptInput prompt={prompt} setPrompt={setPrompt} />
+      <UploadButton isUploading={isUploading} disabled={!file} />
     </form>
   );
 };
