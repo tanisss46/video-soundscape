@@ -37,9 +37,16 @@ const AuthPage = () => {
                   },
                 },
               },
+              className: {
+                container: 'auth-container',
+                button: 'auth-button',
+                input: 'auth-input',
+              },
             }}
             providers={["github", "google"]}
-            redirectTo={window.location.origin}
+            redirectTo={`${window.location.origin}/auth/callback`}
+            onlyThirdPartyProviders={false}
+            view="sign_in"
           />
         </div>
       </div>
