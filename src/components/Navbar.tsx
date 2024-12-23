@@ -10,19 +10,24 @@ export const Navbar = () => {
 
   useEffect(() => {
     const getProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-        
-        if (data?.username) {
-          setUsername(data.username);
-        } else {
-          setUsername(user.email?.split('@')[0] || 'User');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (data?.username) {
+            setUsername(data.username);
+          } else {
+            setUsername(user.email?.split('@')[0] || 'User');
+          }
         }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setUsername('User');
       }
     };
 
