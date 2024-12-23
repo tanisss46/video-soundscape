@@ -13,14 +13,10 @@ export const Hero = () => {
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Upload your videos and let our AI automatically add perfectly timed, contextually relevant sound effects that bring your content to life.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex justify-center">
             <Button size="lg" className="gap-2">
-              <Video className="w-4 h-4" />
-              Try it Now
-            </Button>
-            <Button size="lg" variant="outline" className="gap-2">
-              <Music className="w-4 h-4" />
-              View Demo
+              <Sparkles className="w-4 h-4" />
+              Start Creating for Free
             </Button>
           </div>
         </div>
