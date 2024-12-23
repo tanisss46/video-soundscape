@@ -5,20 +5,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDropzone } from "react-dropzone";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { 'video/*': [] },
+    maxFiles: 1,
+    onDrop: (acceptedFiles) => {
+      setFile(acceptedFiles[0]);
+    }
+  });
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) {
+    if (!file) {
       toast({
         title: "Error",
-        description: "Please provide a title and select a video file",
+        description: "Please select a video file",
         variant: "destructive",
       });
       return;
@@ -29,24 +37,21 @@ export const VideoUpload = () => {
       const fileExt = file.name.split(".").pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
-      // Upload video to storage
       const { error: uploadError } = await supabase.storage
         .from("videos")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from("videos")
         .getPublicUrl(filePath);
 
-      // Save video metadata to database
       const { error: dbError } = await supabase
         .from("videos")
         .insert({
-          title,
-          description,
+          title: file.name,
+          description: prompt,
           video_url: publicUrl,
           user_id: (await supabase.auth.getUser()).data.user?.id,
         });
@@ -58,10 +63,8 @@ export const VideoUpload = () => {
         description: "Video uploaded successfully!",
       });
 
-      // Reset form
       setFile(null);
-      setTitle("");
-      setDescription("");
+      setPrompt("");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -75,41 +78,42 @@ export const VideoUpload = () => {
 
   return (
     <form onSubmit={handleUpload} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter video title"
-          required
-        />
+      <div 
+        {...getRootProps()} 
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+          ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+      >
+        <input {...getInputProps()} />
+        {file ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Selected file:</p>
+            <p className="text-sm text-muted-foreground">{file.name}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {isDragActive ? "Drop the video here" : "Drag & drop a video here"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              or click to select a file
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="prompt">Prompt (Optional)</Label>
         <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter video description (optional)"
+          id="prompt"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Enter a prompt for the AI to generate sound effects"
           rows={4}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="video">Video File</Label>
-        <Input
-          id="video"
-          type="file"
-          accept="video/*"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          required
-        />
-      </div>
-
       <Button type="submit" disabled={isUploading} className="w-full">
-        {isUploading ? "Uploading..." : "Upload Video"}
+        {isUploading ? "Processing..." : "Add Sound Effect"}
       </Button>
     </form>
   );
