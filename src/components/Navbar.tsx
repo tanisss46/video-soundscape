@@ -1,6 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export const Navbar = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto flex items-center justify-between h-16">
@@ -13,7 +22,7 @@ export const Navbar = () => {
           <a href="#pricing" className="text-sm hover:text-primary/80 transition-colors">Pricing</a>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="ghost">Sign In</Button>
+          <Button onClick={handleSignOut} variant="ghost">Sign Out</Button>
           <Button className="bg-[#7b22b4] hover:bg-[#7b22b4]/90">Get Started</Button>
         </div>
       </div>
