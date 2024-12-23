@@ -1,13 +1,23 @@
 import { Navbar } from "@/components/Navbar";
-import { Hero } from "@/components/Hero";
-import { Features } from "@/components/Features";
+import { VideoUpload } from "@/components/VideoUpload";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <Hero />
-      <Features />
+      <main className="container mx-auto px-4 pt-24">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload Video</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VideoUpload />
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 };
