@@ -28,34 +28,46 @@ export const VideoUpload = () => {
     setProcessingStatus("Processing video...");
 
     try {
-      // Send to external API for processing
       const formData = new FormData();
       formData.append("video", file);
       formData.append("prompt", prompt || "default sound");
-      formData.append("duration", "8"); // Default duration
+      formData.append("duration", "8");
+
+      console.log("Sending request with:", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        prompt: prompt || "default sound"
+      });
 
       const response = await fetch("https://mmaudio-fastapi-nfjx.onrender.com/generate_sfx", {
         method: "POST",
         body: formData,
       });
 
+      const responseText = await response.text();
+      console.log("Raw API Response:", responseText);
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API request failed: ${response.statusText}. ${errorText}`);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}. ${responseText}`);
       }
 
-      const apiResponse = await response.json();
-      console.log("API Response:", apiResponse);
+      const apiResponse = JSON.parse(responseText);
+      console.log("Parsed API Response:", apiResponse);
 
-      toast({
-        title: "Success",
-        description: "Video processed successfully!",
-      });
+      if (apiResponse.status === "done" && apiResponse.video_url) {
+        toast({
+          title: "Success",
+          description: "Video processed successfully!",
+        });
+        window.open(apiResponse.video_url, "_blank");
+      } else {
+        throw new Error("Invalid API response format");
+      }
 
       setFile(null);
       setPrompt("");
       setProcessingStatus(null);
-      window.open(apiResponse.video_url, "_blank"); // Open processed video
     } catch (error: any) {
       console.error("Upload error:", error);
       setProcessingStatus("Error occurred during processing");
