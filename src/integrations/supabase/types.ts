@@ -30,6 +30,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_generations: {
+        Row: {
+          audio_url: string | null
+          duration: number | null
+          error_message: string | null
+          id: number
+          prompt: string
+          status: string | null
+          video_url: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          duration?: number | null
+          error_message?: string | null
+          id?: number
+          prompt: string
+          status?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          duration?: number | null
+          error_message?: string | null
+          id?: number
+          prompt?: string
+          status?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       videos: {
         Row: {
           created_at: string
