@@ -8,13 +8,43 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is already signed in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/");
+      }
+    };
+    
+    checkUser();
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
+      if (event === 'SIGNED_IN' && session) {
+        // Create a profile for the user if they don't have one
+        const createProfile = async () => {
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select()
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (!existingProfile) {
+            await supabase.from('profiles').insert({
+              id: session.user.id,
+              username: session.user.email?.split('@')[0] || 'User'
+            });
+          }
+        };
+
+        createProfile();
         navigate("/");
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
@@ -47,7 +77,7 @@ const AuthPage = () => {
               },
             }}
             providers={["github", "google"]}
-            redirectTo="http://localhost:5173/auth/callback"
+            redirectTo={`${window.location.origin}/auth/callback`}
             onlyThirdPartyProviders={false}
             view="sign_in"
           />
