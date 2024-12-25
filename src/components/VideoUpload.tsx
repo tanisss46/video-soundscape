@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
@@ -24,6 +24,7 @@ export const VideoUpload = () => {
 
     setIsUploading(true);
     try {
+      // First, upload to Supabase Storage
       const fileExt = file.name.split(".").pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
@@ -37,6 +38,7 @@ export const VideoUpload = () => {
         .from("videos")
         .getPublicUrl(filePath);
 
+      // Create a record in the videos table
       const { error: dbError } = await supabase
         .from("videos")
         .insert({
@@ -48,14 +50,33 @@ export const VideoUpload = () => {
 
       if (dbError) throw dbError;
 
+      // Send to external API for processing
+      const formData = new FormData();
+      formData.append("video", file);
+      formData.append("prompt", prompt);
+      formData.append("duration", "8"); // Default duration
+
+      const response = await fetch("https://mmaudio-fastapi-nfjx.onrender.com/generate_sfx", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const apiResponse = await response.json();
+      console.log("API Response:", apiResponse);
+
       toast({
         title: "Success",
-        description: "Video uploaded successfully!",
+        description: "Video uploaded and sent for processing!",
       });
 
       setFile(null);
       setPrompt("");
     } catch (error: any) {
+      console.error("Upload error:", error);
       toast({
         title: "Error",
         description: error.message,
