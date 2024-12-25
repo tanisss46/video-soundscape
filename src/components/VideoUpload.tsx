@@ -34,7 +34,6 @@ export const VideoUpload = () => {
       formData.append("prompt", prompt || "default sound");
       formData.append("duration", "8"); // Default duration
 
-      console.log("Sending request to API...");
       const response = await fetch("https://mmaudio-fastapi-nfjx.onrender.com/generate_sfx", {
         method: "POST",
         body: formData,
@@ -56,6 +55,7 @@ export const VideoUpload = () => {
       setFile(null);
       setPrompt("");
       setProcessingStatus(null);
+      window.open(apiResponse.video_url, "_blank"); // Open processed video
     } catch (error: any) {
       console.error("Upload error:", error);
       setProcessingStatus("Error occurred during processing");
