@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
 import { UploadButton } from "./upload/UploadButton";
@@ -26,25 +25,9 @@ export const VideoUpload = () => {
     }
 
     setIsUploading(true);
-    setProcessingStatus("Uploading video...");
+    setProcessingStatus("Processing video...");
 
     try {
-      // First, upload to Supabase Storage
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("videos")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("videos")
-        .getPublicUrl(filePath);
-
-      setProcessingStatus("Processing video...");
-
       // Send to external API for processing
       const formData = new FormData();
       formData.append("video", file);
