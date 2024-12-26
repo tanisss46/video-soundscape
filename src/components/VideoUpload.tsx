@@ -5,6 +5,7 @@ import { PromptInput } from "./upload/PromptInput";
 import { UploadButton } from "./upload/UploadButton";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 export const VideoUpload = () => {
@@ -12,6 +13,7 @@ export const VideoUpload = () => {
   const [prompt, setPrompt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+  const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -27,6 +29,7 @@ export const VideoUpload = () => {
 
     setIsUploading(true);
     setProcessingStatus("Uploading video...");
+    setProcessedVideoUrl(null);
 
     try {
       // First, upload the video to Supabase Storage
@@ -58,11 +61,11 @@ export const VideoUpload = () => {
       console.log('Edge function response:', data);
 
       if (data.output) {
+        setProcessedVideoUrl(data.output);
         toast({
           title: "Success",
           description: "Video processed successfully!",
         });
-        window.open(data.output, "_blank");
       } else {
         throw new Error("Invalid API response format");
       }
@@ -93,6 +96,25 @@ export const VideoUpload = () => {
             <AlertDescription>{processingStatus}</AlertDescription>
           </Alert>
           <Progress value={isUploading ? 75 : 0} className="h-2" />
+        </div>
+      )}
+      {processedVideoUrl && (
+        <div className="space-y-4">
+          <Alert>
+            <AlertDescription>Your video is ready!</AlertDescription>
+          </Alert>
+          <video 
+            src={processedVideoUrl} 
+            controls 
+            className="w-full rounded-lg border"
+          />
+          <Button 
+            type="button" 
+            className="w-full"
+            onClick={() => window.open(processedVideoUrl, "_blank")}
+          >
+            Download Video
+          </Button>
         </div>
       )}
       <UploadButton isUploading={isUploading} disabled={!file} />
