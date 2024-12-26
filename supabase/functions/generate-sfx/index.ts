@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,27 +21,29 @@ serve(async (req) => {
     console.log('Processing video:', videoUrl);
     console.log('With prompt:', prompt);
 
-    // Initialize Replicate API with fetch
     const replicateApiKey = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiKey) {
-      console.error('REPLICATE_API_TOKEN environment variable is not set');
       throw new Error('REPLICATE_API_TOKEN is not set');
     }
 
-    console.log('Replicate API Key exists:', !!replicateApiKey);
-
-    // Create prediction using Replicate's REST API directly
+    // Make prediction request to Replicate API
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${replicateApiKey}`,
+        'Authorization': `Bearer ${replicateApiKey}`,
         'Content-Type': 'application/json',
+        'Prefer': 'wait',
       },
       body: JSON.stringify({
         version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
         input: {
           video: videoUrl,
-          prompt: prompt || "default sound"
+          prompt: prompt || "default sound",
+          seed: -1,
+          duration: 8,
+          num_steps: 25,
+          cfg_strength: 4.5,
+          negative_prompt: "music"
         },
       }),
     });
@@ -53,42 +54,8 @@ serve(async (req) => {
       throw new Error(`Replicate API error: ${JSON.stringify(error)}`);
     }
 
-    let prediction = await response.json();
-    console.log('Initial prediction:', prediction);
-
-    // Poll for the prediction result
-    while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-        headers: {
-          'Authorization': `Token ${replicateApiKey}`,
-        },
-      });
-      prediction = await pollResponse.json();
-      console.log('Polling prediction:', prediction);
-    }
-
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Save the prediction to the database
-    const { error: dbError } = await supabaseClient
-      .from('user_generations')
-      .insert({
-        prompt: prompt,
-        status: prediction.status,
-        video_url: videoUrl,
-        audio_url: prediction.output,
-        error_message: prediction.error
-      });
-
-    if (dbError) {
-      console.error('Database error:', dbError);
-      throw new Error('Failed to save prediction to database');
-    }
+    const prediction = await response.json();
+    console.log('Prediction response:', prediction);
 
     return new Response(
       JSON.stringify(prediction),
