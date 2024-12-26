@@ -5,6 +5,7 @@ import { PromptInput } from "./upload/PromptInput";
 import { UploadButton } from "./upload/UploadButton";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -25,42 +26,49 @@ export const VideoUpload = () => {
     }
 
     setIsUploading(true);
-    setProcessingStatus("Processing video...");
+    setProcessingStatus("Uploading video...");
 
     try {
-      const formData = new FormData();
-      formData.append("video", file);
-      formData.append("prompt", prompt || "default sound");
-      formData.append("duration", "8");
+      // First, upload the video to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(fileName, file);
 
-      console.log("Sending request with:", {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        prompt: prompt || "default sound"
+      if (uploadError) throw uploadError;
+
+      // Get the public URL of the uploaded video
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+
+      setProcessingStatus("Generating sound effect...");
+
+      // Call our Edge Function to process the video with Replicate
+      const response = await fetch('/api/generate-sfx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoUrl: publicUrl,
+          prompt: prompt || "default sound"
+        }),
       });
-
-      const response = await fetch("https://mmaudio-fastapi-nfjx.onrender.com/generate_sfx", {
-        method: "POST",
-        body: formData,
-      });
-
-      const responseText = await response.text();
-      console.log("Raw API Response:", responseText);
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}. ${responseText}`);
+        throw new Error(`API request failed: ${response.status}`);
       }
 
-      const apiResponse = JSON.parse(responseText);
-      console.log("Parsed API Response:", apiResponse);
+      const result = await response.json();
 
-      if (apiResponse.status === "done" && apiResponse.video_url) {
+      if (result.videoUrl) {
         toast({
           title: "Success",
           description: "Video processed successfully!",
         });
-        window.open(apiResponse.video_url, "_blank");
+        window.open(result.videoUrl, "_blank");
       } else {
         throw new Error("Invalid API response format");
       }
