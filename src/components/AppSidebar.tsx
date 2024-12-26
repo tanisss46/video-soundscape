@@ -34,21 +34,21 @@ const menuItems = [
 
 export function AppSidebar() {
   return (
-    <Sidebar className="w-64 border-r border-border/50">
+    <Sidebar className="w-48 border-r border-border/50">
       <SidebarContent>
-        <div className="p-6">
-          <h1 className="text-xl font-bold gradient-text">SoundAI</h1>
+        <div className="p-4">
+          <h1 className="text-lg font-bold gradient-text">SoundAI</h1>
         </div>
         <SidebarGroup>
-          <div className="px-3 py-2">
+          <div className="px-2 py-2">
             <p className="text-xs font-medium text-muted-foreground mb-3">Menu</p>
             <SidebarGroupContent>
               <SidebarMenu>
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center gap-3 px-3 py-2 text-sm">
-                        <item.icon className="h-5 w-5" />
+                      <a href={item.url} className="flex items-center gap-2 px-2 py-2 text-sm">
+                        <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </a>
                     </SidebarMenuButton>
