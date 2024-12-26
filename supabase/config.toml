@@ -1,3 +1,5 @@
 project_id = "rguckkvwvgwrpdpavpga"
 [functions.hello-world]
 verify_jwt = false
+[functions.generate-sfx]
+verify_jwt = false
