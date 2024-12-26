@@ -2,3 +2,6 @@ project_id = "rguckkvwvgwrpdpavpga"
 
 [functions.generate-sfx]
 verify_jwt = false
+
+[functions.mmaudio]
+verify_jwt = false
