@@ -57,15 +57,28 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="cfgStrength">Guidance Strength (CFG)</Label>
-            <div className="pt-2">
-              <Slider
-                id="cfgStrength"
+            <Label htmlFor="cfgStrength">
+              Guidance Strength (CFG): {settings.cfgStrength.toFixed(1)}
+            </Label>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Slider
+                  id="cfgStrength"
+                  min={1}
+                  max={10}
+                  step={0.1}
+                  value={[settings.cfgStrength]}
+                  onValueChange={(value) => handleChange('cfgStrength', value[0])}
+                />
+              </div>
+              <Input
+                type="number"
                 min={1}
                 max={10}
                 step={0.1}
-                value={[settings.cfgStrength]}
-                onValueChange={(value) => handleChange('cfgStrength', value[0])}
+                value={settings.cfgStrength}
+                onChange={(e) => handleChange('cfgStrength', e.target.value)}
+                className="w-20"
               />
             </div>
             <p className="text-sm text-muted-foreground">
@@ -74,15 +87,28 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="numSteps">Number of Steps</Label>
-            <div className="pt-2">
-              <Slider
-                id="numSteps"
+            <Label htmlFor="numSteps">
+              Number of Steps: {settings.numSteps}
+            </Label>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Slider
+                  id="numSteps"
+                  min={10}
+                  max={50}
+                  step={1}
+                  value={[settings.numSteps]}
+                  onValueChange={(value) => handleChange('numSteps', value[0])}
+                />
+              </div>
+              <Input
+                type="number"
                 min={10}
                 max={50}
                 step={1}
-                value={[settings.numSteps]}
-                onValueChange={(value) => handleChange('numSteps', value[0])}
+                value={settings.numSteps}
+                onChange={(e) => handleChange('numSteps', e.target.value)}
+                className="w-20"
               />
             </div>
             <p className="text-sm text-muted-foreground">
@@ -91,15 +117,28 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="duration">Duration (seconds)</Label>
-            <Input
-              id="duration"
-              type="number"
-              min="1"
-              max="30"
-              value={settings.duration}
-              onChange={(e) => handleChange('duration', e.target.value)}
-            />
+            <Label htmlFor="duration">Duration (seconds): {settings.duration}</Label>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Slider
+                  id="duration"
+                  min={1}
+                  max={30}
+                  step={1}
+                  value={[settings.duration]}
+                  onValueChange={(value) => handleChange('duration', value[0])}
+                />
+              </div>
+              <Input
+                type="number"
+                min={1}
+                max={30}
+                step={1}
+                value={settings.duration}
+                onChange={(e) => handleChange('duration', e.target.value)}
+                className="w-20"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               Note: The final duration will be limited by your video length
             </p>
