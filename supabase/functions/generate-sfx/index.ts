@@ -13,10 +13,7 @@ serve(async (req) => {
 
   try {
     const { videoUrl, prompt } = await req.json();
-
-    if (!videoUrl) {
-      throw new Error('Video URL is required');
-    }
+    console.log('Received request with videoUrl:', videoUrl, 'and prompt:', prompt);
 
     // Get and verify the API token
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
@@ -24,12 +21,13 @@ serve(async (req) => {
       throw new Error('REPLICATE_API_TOKEN is not configured');
     }
 
-    // Create prediction
-    const createPredictionResponse = await fetch('https://api.replicate.com/v1/predictions', {
+    // Create prediction with exact API specifications
+    const prediction = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${replicateApiToken}`,
+        'Authorization': `Bearer ${replicateApiToken}`,
         'Content-Type': 'application/json',
+        'Prefer': 'wait', // This will make the API wait for the result
       },
       body: JSON.stringify({
         version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
@@ -45,49 +43,19 @@ serve(async (req) => {
       }),
     });
 
-    if (!createPredictionResponse.ok) {
-      const errorData = await createPredictionResponse.json();
+    console.log('Prediction API response status:', prediction.status);
+
+    if (!prediction.ok) {
+      const errorData = await prediction.json();
       console.error('Replicate API error:', errorData);
       throw new Error(`Failed to create prediction: ${JSON.stringify(errorData)}`);
     }
 
-    let prediction = await createPredictionResponse.json();
-    console.log('Prediction created:', prediction.id);
+    const result = await prediction.json();
+    console.log('Prediction completed successfully:', result);
 
-    // Poll for results
-    const startTime = Date.now();
-    const timeout = 5 * 60 * 1000; // 5 minutes timeout
-
-    while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
-      if (Date.now() - startTime > timeout) {
-        throw new Error('Prediction timed out after 5 minutes');
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-        headers: {
-          'Authorization': `Token ${replicateApiToken}`,
-        },
-      });
-
-      if (!pollResponse.ok) {
-        const errorData = await pollResponse.json();
-        console.error('Polling error:', errorData);
-        throw new Error(`Error while polling: ${JSON.stringify(errorData)}`);
-      }
-
-      prediction = await pollResponse.json();
-      console.log(`Status update for ${prediction.id}: ${prediction.status}`);
-    }
-
-    if (prediction.status === 'failed') {
-      throw new Error(`Prediction failed: ${prediction.error || 'Unknown error'}`);
-    }
-
-    console.log('Prediction completed successfully:', prediction.id);
     return new Response(
-      JSON.stringify(prediction),
+      JSON.stringify(result),
       { 
         headers: {
           ...corsHeaders,
