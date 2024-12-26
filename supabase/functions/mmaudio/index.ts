@@ -27,10 +27,19 @@ serve(async (req) => {
           headers: {
             'Authorization': `Bearer ${replicateApiToken}`,
             'Content-Type': 'application/json',
+            'Prefer': 'wait'
           },
           body: JSON.stringify({
-            version: params.version,
-            input: params.input,
+            version: params.version || "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
+            input: {
+              video: params.video_url,
+              prompt: params.prompt || "default sound",
+              seed: -1,
+              duration: params.duration || 8,
+              num_steps: params.num_steps || 25,
+              cfg_strength: params.cfg_strength || 4.5,
+              negative_prompt: "music"
+            }
           }),
         });
 
