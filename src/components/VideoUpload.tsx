@@ -45,22 +45,32 @@ export const VideoUpload = () => {
 
       setProcessingStatus("Generating sound effect...");
 
-      // Call our Edge Function to process the video with Replicate
-      const { data, error } = await supabase.functions.invoke('generate-sfx', {
-        body: {
+      // Call the Edge Function using the full URL
+      const response = await fetch('https://rguckkvwvgwrpdpavpga.supabase.co/functions/v1/generate-sfx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
           videoUrl: publicUrl,
           prompt: prompt || "default sound"
-        }
+        })
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
 
-      if (data.videoUrl) {
+      const result = await response.json();
+      console.log('Edge function response:', result);
+
+      if (result.videoUrl) {
         toast({
           title: "Success",
           description: "Video processed successfully!",
         });
-        window.open(data.videoUrl, "_blank");
+        window.open(result.videoUrl, "_blank");
       } else {
         throw new Error("Invalid API response format");
       }
