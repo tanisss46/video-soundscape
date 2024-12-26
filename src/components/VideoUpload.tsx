@@ -17,11 +17,12 @@ export const VideoUpload = () => {
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
     seed: -1,
-    duration: 5,
-    numSteps: 35,
-    cfgStrength: 6.5,
-    negativePrompt: "music, background noise"
+    duration: 10, // Increased default duration
+    numSteps: 50, // Increased for better quality
+    cfgStrength: 4.5, // Lowered for more natural results
+    negativePrompt: "background noise, static" // Updated negative prompt
   });
+  
   const { toast } = useToast();
 
   const handleUpload = async (e: React.FormEvent) => {

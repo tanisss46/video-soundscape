@@ -82,7 +82,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Higher values (4-7) make the sound more closely match the prompt. Lower values allow more creativity.
+              Lower values (1-4) allow more creativity, higher values (5-10) match the prompt more closely
             </p>
           </div>
 
@@ -95,7 +95,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
                 <Slider
                   id="numSteps"
                   min={10}
-                  max={50}
+                  max={100} // Increased max steps
                   step={1}
                   value={[settings.numSteps]}
                   onValueChange={(value) => handleChange('numSteps', value[0])}
@@ -104,7 +104,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               <Input
                 type="number"
                 min={10}
-                max={50}
+                max={100}
                 step={1}
                 value={settings.numSteps}
                 onChange={(e) => handleChange('numSteps', e.target.value)}
@@ -112,7 +112,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              More steps (25-50) generally produce better quality but take longer
+              More steps (50-100) produce better quality but take longer
             </p>
           </div>
 
@@ -123,7 +123,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
                 <Slider
                   id="duration"
                   min={1}
-                  max={30}
+                  max={60} // Increased max duration
                   step={1}
                   value={[settings.duration]}
                   onValueChange={(value) => handleChange('duration', value[0])}
@@ -132,7 +132,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               <Input
                 type="number"
                 min={1}
-                max={30}
+                max={60}
                 step={1}
                 value={settings.duration}
                 onChange={(e) => handleChange('duration', e.target.value)}
@@ -140,7 +140,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Note: The final duration will be limited by your video length
+              Longer durations allow for more complete soundscapes
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               id="negativePrompt"
               value={settings.negativePrompt}
               onChange={(e) => handleChange('negativePrompt', e.target.value)}
-              placeholder="Sounds to avoid (e.g., 'music, talking, background noise')"
+              placeholder="Sounds to avoid (e.g., 'background noise, static, distortion')"
             />
             <p className="text-sm text-muted-foreground">
               Specify sounds you want to avoid in the generation
