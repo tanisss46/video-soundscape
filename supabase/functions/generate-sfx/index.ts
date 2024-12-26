@@ -13,21 +13,20 @@ serve(async (req) => {
 
   try {
     const { videoUrl, prompt } = await req.json();
-    console.log('Received request with videoUrl:', videoUrl, 'and prompt:', prompt);
+    console.log('Processing request for video:', videoUrl, 'with prompt:', prompt);
 
-    // Get and verify the API token
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiToken) {
       throw new Error('REPLICATE_API_TOKEN is not configured');
     }
 
-    // Create prediction with exact API specifications
+    // Call Replicate API with exact specifications from their documentation
     const prediction = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${replicateApiToken}`,
         'Content-Type': 'application/json',
-        'Prefer': 'wait', // This will make the API wait for the result
+        'Prefer': 'wait'
       },
       body: JSON.stringify({
         version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
@@ -39,20 +38,17 @@ serve(async (req) => {
           num_steps: 25,
           cfg_strength: 4.5,
           negative_prompt: "music"
-        },
-      }),
+        }
+      })
     });
 
-    console.log('Prediction API response status:', prediction.status);
+    console.log('Replicate API response status:', prediction.status);
+    const result = await prediction.json();
+    console.log('Replicate API response:', result);
 
     if (!prediction.ok) {
-      const errorData = await prediction.json();
-      console.error('Replicate API error:', errorData);
-      throw new Error(`Failed to create prediction: ${JSON.stringify(errorData)}`);
+      throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
     }
-
-    const result = await prediction.json();
-    console.log('Prediction completed successfully:', result);
 
     return new Response(
       JSON.stringify(result),
@@ -60,7 +56,7 @@ serve(async (req) => {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
-        },
+        }
       }
     );
 
@@ -73,7 +69,7 @@ serve(async (req) => {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
-        },
+        }
       }
     );
   }
