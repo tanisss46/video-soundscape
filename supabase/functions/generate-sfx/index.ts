@@ -23,7 +23,7 @@ serve(async (req) => {
 
     console.log('Making request to Replicate API...');
     
-    // Call Replicate API with exact specifications from their documentation
+    // Create prediction
     const prediction = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -46,7 +46,7 @@ serve(async (req) => {
 
     console.log('Replicate API response status:', prediction.status);
     const result = await prediction.json();
-    console.log('Replicate API response:', result);
+    console.log('Replicate API initial response:', result);
 
     // Check for API-specific error responses
     if (result.error) {
@@ -54,8 +54,36 @@ serve(async (req) => {
       throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
     }
 
+    // Poll for completion if the prediction is still processing
+    let finalResult = result;
+    if (result.status === 'starting' || result.status === 'processing') {
+      console.log('Prediction is processing, polling for completion...');
+      
+      // Poll every 2 seconds for up to 30 seconds
+      for (let i = 0; i < 15; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+          headers: {
+            'Authorization': `Token ${replicateApiToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        finalResult = await pollResponse.json();
+        console.log('Poll response:', finalResult);
+        
+        if (finalResult.status === 'succeeded') {
+          console.log('Prediction completed successfully');
+          break;
+        } else if (finalResult.status === 'failed') {
+          throw new Error(`Prediction failed: ${finalResult.error}`);
+        }
+      }
+    }
+
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify(finalResult),
       { 
         headers: {
           ...corsHeaders,
