@@ -17,9 +17,19 @@ serve(async (req) => {
       throw new Error('REPLICATE_API_TOKEN is not configured in environment variables');
     }
 
-    const { videoUrl, prompt, seed, duration, numSteps, cfgStrength, negativePrompt } = await req.json();
+    const { videoUrl, prompt, seed, duration, num_steps, cfg_strength, negative_prompt } = await req.json();
 
-    // Create prediction
+    console.log('Received parameters:', {
+      videoUrl,
+      prompt,
+      seed,
+      duration,
+      num_steps,
+      cfg_strength,
+      negative_prompt
+    });
+
+    // Create prediction with exact values from frontend
     const response = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
@@ -31,11 +41,11 @@ serve(async (req) => {
         input: {
           video: videoUrl,
           prompt: prompt,
-          seed: seed || -1,
-          duration: duration || 8,
-          num_steps: numSteps || 25,
-          cfg_strength: cfgStrength || 4.5,
-          negative_prompt: negativePrompt || "music"
+          seed: parseInt(seed), // Ensure seed is passed as integer
+          duration: parseInt(duration),
+          num_steps: parseInt(num_steps),
+          cfg_strength: parseFloat(cfg_strength),
+          negative_prompt: negative_prompt
         },
       }),
     });

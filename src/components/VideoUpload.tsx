@@ -17,10 +17,10 @@ export const VideoUpload = () => {
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
     seed: -1,
-    duration: 10, // Increased default duration
-    numSteps: 50, // Increased for better quality
-    cfgStrength: 4.5, // Lowered for more natural results
-    negativePrompt: "background noise, static" // Updated negative prompt
+    duration: 10,
+    numSteps: 50,
+    cfgStrength: 4.5,
+    negativePrompt: "background noise, static"
   });
   
   const { toast } = useToast();
@@ -48,18 +48,15 @@ export const VideoUpload = () => {
     setProcessedVideoUrl(null);
 
     try {
-      // Get the current session to ensure we're authenticated
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
         throw new Error("Authentication required");
       }
 
-      // Generate a unique filename
       const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
       const fileName = `${timestamp}.${fileExt}`;
 
-      // Upload the file
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
         .upload(fileName, file, {
@@ -69,23 +66,32 @@ export const VideoUpload = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('videos')
         .getPublicUrl(fileName);
 
       setProcessingStatus("Generating sound effect...");
 
-      // Call the Edge Function
+      // Log the parameters being sent to verify they're correct
+      console.log('Sending parameters to edge function:', {
+        videoUrl: publicUrl,
+        prompt,
+        seed: advancedSettings.seed,
+        duration: advancedSettings.duration,
+        num_steps: advancedSettings.numSteps,
+        cfg_strength: advancedSettings.cfgStrength,
+        negative_prompt: advancedSettings.negativePrompt
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-sfx', {
         body: {
           videoUrl: publicUrl,
           prompt: prompt || "ambient sound matching the video content",
           seed: advancedSettings.seed,
           duration: advancedSettings.duration,
-          numSteps: advancedSettings.numSteps,
-          cfgStrength: advancedSettings.cfgStrength,
-          negativePrompt: advancedSettings.negativePrompt
+          num_steps: advancedSettings.numSteps,
+          cfg_strength: advancedSettings.cfgStrength,
+          negative_prompt: advancedSettings.negativePrompt
         }
       });
 
