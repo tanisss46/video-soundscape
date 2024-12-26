@@ -14,23 +14,23 @@ serve(async (req) => {
   try {
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiToken) {
-      throw new Error('REPLICATE_API_TOKEN is not configured in Supabase Edge Function secrets');
+      throw new Error('REPLICATE_API_TOKEN is not configured in environment variables');
     }
 
-    const { action, ...params } = await req.json();
-    console.log('Processing request:', { action, params });
+    const { action, params } = await req.json();
+    console.log('Received request with action:', action, 'and params:', params);
 
+    let response;
     switch (action) {
       case 'create_prediction':
-        const prediction = await fetch('https://api.replicate.com/v1/predictions', {
+        response = await fetch('https://api.replicate.com/v1/predictions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${replicateApiToken}`,
+            'Authorization': `Token ${replicateApiToken}`,
             'Content-Type': 'application/json',
-            'Prefer': 'wait'
           },
           body: JSON.stringify({
-            version: params.version || "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
+            version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
             input: {
               video: params.video_url,
               prompt: params.prompt || "default sound",
@@ -42,46 +42,43 @@ serve(async (req) => {
             }
           }),
         });
-
-        const result = await prediction.json();
-        console.log('Replicate API response:', result);
-
-        if (!prediction.ok) {
-          throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
-        }
-
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        break;
 
       case 'get_prediction':
-        const status = await fetch(`https://api.replicate.com/v1/predictions/${params.id}`, {
+        response = await fetch(`https://api.replicate.com/v1/predictions/${params.id}`, {
           headers: {
-            'Authorization': `Bearer ${replicateApiToken}`,
+            'Authorization': `Token ${replicateApiToken}`,
+            'Content-Type': 'application/json',
           },
         });
-
-        const statusResult = await status.json();
-        return new Response(JSON.stringify(statusResult), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        break;
 
       case 'cancel_prediction':
-        const cancel = await fetch(`https://api.replicate.com/v1/predictions/${params.id}/cancel`, {
+        response = await fetch(`https://api.replicate.com/v1/predictions/${params.id}/cancel`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${replicateApiToken}`,
+            'Authorization': `Token ${replicateApiToken}`,
+            'Content-Type': 'application/json',
           },
         });
-
-        const cancelResult = await cancel.json();
-        return new Response(JSON.stringify(cancelResult), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        break;
 
       default:
         throw new Error(`Unknown action: ${action}`);
     }
+
+    console.log('Replicate API response status:', response.status);
+    const result = await response.json();
+    console.log('Replicate API response:', result);
+
+    if (!response.ok) {
+      throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
+    }
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
     console.error('Error in mmaudio function:', error);
     return new Response(
