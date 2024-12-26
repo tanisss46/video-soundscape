@@ -21,10 +21,14 @@ serve(async (req) => {
     console.log('Processing video:', videoUrl);
     console.log('With prompt:', prompt);
 
+    // Get the API token and verify it exists
     const replicateApiKey = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiKey) {
-      throw new Error('REPLICATE_API_TOKEN is not set');
+      console.error('REPLICATE_API_TOKEN is not set');
+      throw new Error('REPLICATE_API_TOKEN environment variable is not configured');
     }
+
+    console.log('Making request to Replicate API...');
 
     // Start prediction with retry mechanism
     let response;
@@ -51,11 +55,18 @@ serve(async (req) => {
             },
           }),
         });
+
+        const responseText = await response.text();
+        console.log('Raw API Response:', responseText);
         
-        if (response.ok) break;
+        if (response.ok) {
+          response = new Response(responseText, response);
+          break;
+        }
         
         retries--;
         if (retries > 0) {
+          console.log(`Retrying... ${retries} attempts left`);
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       } catch (error) {
@@ -67,9 +78,7 @@ serve(async (req) => {
     }
 
     if (!response?.ok) {
-      const error = await response?.json();
-      console.error('Replicate API error response:', error);
-      throw new Error(`Replicate API error: ${JSON.stringify(error)}`);
+      throw new Error(`Replicate API error: ${await response?.text()}`);
     }
 
     let prediction = await response.json();
@@ -93,9 +102,9 @@ serve(async (req) => {
       });
       
       if (!pollResponse.ok) {
-        const error = await pollResponse.json();
+        const error = await pollResponse.text();
         console.error('Polling error:', error);
-        throw new Error(`Polling error: ${JSON.stringify(error)}`);
+        throw new Error(`Polling error: ${error}`);
       }
       
       prediction = await pollResponse.json();
