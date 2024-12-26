@@ -29,6 +29,7 @@ serve(async (req) => {
     }
 
     console.log('Making request to Replicate API...');
+    console.log('Using token:', replicateApiToken.substring(0, 5) + '...');
 
     // Start prediction with retry mechanism
     let prediction;
@@ -36,6 +37,8 @@ serve(async (req) => {
     
     while (retries > 0) {
       try {
+        console.log(`Attempt ${4 - retries} to create prediction`);
+        
         const response = await fetch('https://api.replicate.com/v1/predictions', {
           method: 'POST',
           headers: {
@@ -57,33 +60,34 @@ serve(async (req) => {
         });
 
         const responseData = await response.json();
-        console.log('API Response:', responseData);
+        console.log('Replicate API Response:', JSON.stringify(responseData, null, 2));
 
         if (response.ok) {
           prediction = responseData;
+          console.log('Successfully created prediction:', prediction.id);
           break;
-        }
-        
-        retries--;
-        if (retries > 0) {
-          console.log(`Retrying... ${retries} attempts left`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
         } else {
+          console.error('Error response from Replicate:', responseData);
           throw new Error(`Replicate API error: ${JSON.stringify(responseData)}`);
         }
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error(`Attempt ${4 - retries} failed:`, error);
         retries--;
-        if (retries === 0) throw error;
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        if (retries > 0) {
+          console.log(`Retrying in 1 second... ${retries} attempts left`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw error;
+        }
       }
     }
 
     if (!prediction) {
-      throw new Error('Failed to create prediction after retries');
+      throw new Error('Failed to create prediction after all retries');
     }
 
-    console.log('Initial prediction:', prediction);
+    console.log('Starting to poll for prediction result...');
 
     // Poll for the prediction result with timeout
     const startTime = Date.now();
@@ -96,6 +100,8 @@ serve(async (req) => {
 
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      console.log(`Polling prediction ${prediction.id}...`);
+      
       const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
           'Authorization': `Token ${replicateApiToken}`,
@@ -103,18 +109,20 @@ serve(async (req) => {
       });
       
       if (!pollResponse.ok) {
-        const error = await pollResponse.text();
-        console.error('Polling error:', error);
-        throw new Error(`Polling error: ${error}`);
+        const errorData = await pollResponse.json();
+        console.error('Polling error:', errorData);
+        throw new Error(`Polling error: ${JSON.stringify(errorData)}`);
       }
       
       prediction = await pollResponse.json();
-      console.log('Polling prediction status:', prediction.status);
+      console.log('Current prediction status:', prediction.status);
     }
 
     if (prediction.status === 'failed') {
-      throw new Error(`Prediction failed: ${prediction.error}`);
+      throw new Error(`Prediction failed: ${prediction.error || 'Unknown error'}`);
     }
+
+    console.log('Prediction completed successfully:', prediction);
 
     return new Response(
       JSON.stringify(prediction),
