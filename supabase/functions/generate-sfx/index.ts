@@ -31,12 +31,12 @@ serve(async (req) => {
     console.log('Making request to Replicate API...');
 
     // Start prediction with retry mechanism
-    let response;
+    let prediction;
     let retries = 3;
     
     while (retries > 0) {
       try {
-        response = await fetch('https://api.replicate.com/v1/predictions', {
+        const response = await fetch('https://api.replicate.com/v1/predictions', {
           method: 'POST',
           headers: {
             'Authorization': `Token ${replicateApiToken}`,
@@ -56,17 +56,20 @@ serve(async (req) => {
           }),
         });
 
+        const responseData = await response.json();
+        console.log('API Response:', responseData);
+
         if (response.ok) {
+          prediction = responseData;
           break;
         }
-        
-        const errorText = await response.text();
-        console.error('API Response Error:', errorText);
         
         retries--;
         if (retries > 0) {
           console.log(`Retrying... ${retries} attempts left`);
           await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw new Error(`Replicate API error: ${JSON.stringify(responseData)}`);
         }
       } catch (error) {
         console.error('Fetch error:', error);
@@ -76,11 +79,10 @@ serve(async (req) => {
       }
     }
 
-    if (!response?.ok) {
-      throw new Error(`Replicate API error: ${await response?.text()}`);
+    if (!prediction) {
+      throw new Error('Failed to create prediction after retries');
     }
 
-    let prediction = await response.json();
     console.log('Initial prediction:', prediction);
 
     // Poll for the prediction result with timeout
