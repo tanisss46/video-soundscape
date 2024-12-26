@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { AdvancedSettings, AdvancedSettingsValues } from "./upload/AdvancedSettings";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -14,6 +15,13 @@ export const VideoUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
+  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
+    seed: -1,
+    duration: 8,
+    numSteps: 25,
+    cfgStrength: 4.5,
+    negativePrompt: "music"
+  });
   const { toast } = useToast();
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -48,11 +56,16 @@ export const VideoUpload = () => {
 
       setProcessingStatus("Generating sound effect...");
 
-      // Call the Edge Function
+      // Call the Edge Function with advanced settings
       const { data, error } = await supabase.functions.invoke('generate-sfx', {
         body: {
           videoUrl: publicUrl,
-          prompt: prompt || "default sound"
+          prompt: prompt || "default sound",
+          seed: advancedSettings.seed,
+          duration: advancedSettings.duration,
+          numSteps: advancedSettings.numSteps,
+          cfgStrength: advancedSettings.cfgStrength,
+          negativePrompt: advancedSettings.negativePrompt
         }
       });
 
@@ -90,6 +103,10 @@ export const VideoUpload = () => {
     <form onSubmit={handleUpload} className="space-y-6">
       <DropZone file={file} setFile={setFile} />
       <PromptInput prompt={prompt} setPrompt={setPrompt} />
+      <AdvancedSettings 
+        settings={advancedSettings}
+        onSettingsChange={setAdvancedSettings}
+      />
       {processingStatus && (
         <div className="space-y-2">
           <Alert>

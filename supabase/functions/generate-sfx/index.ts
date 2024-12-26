@@ -12,85 +12,76 @@ serve(async (req) => {
   }
 
   try {
-    const { videoUrl, prompt } = await req.json();
-    console.log('Processing request for video:', videoUrl, 'with prompt:', prompt);
-
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiToken) {
-      console.error('REPLICATE_API_TOKEN is not configured');
-      throw new Error('REPLICATE_API_TOKEN is not configured in Supabase Edge Function secrets');
+      throw new Error('REPLICATE_API_TOKEN is not configured in environment variables');
     }
 
-    console.log('Making request to Replicate API...');
-    
+    const { videoUrl, prompt, seed, duration, numSteps, cfgStrength, negativePrompt } = await req.json();
+
     // Create prediction
-    const prediction = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
+    const response = await fetch("https://api.replicate.com/v1/predictions", {
+      method: "POST",
       headers: {
-        'Authorization': `Token ${replicateApiToken}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Token ${replicateApiToken}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
         input: {
           video: videoUrl,
-          prompt: prompt || "default sound",
-          seed: -1,
-          duration: 8,
-          num_steps: 25,
-          cfg_strength: 4.5,
-          negative_prompt: "music"
-        }
-      })
+          prompt: prompt,
+          seed: seed || -1,
+          duration: duration || 8,
+          num_steps: numSteps || 25,
+          cfg_strength: cfgStrength || 4.5,
+          negative_prompt: negativePrompt || "music"
+        },
+      }),
     });
 
-    console.log('Replicate API response status:', prediction.status);
-    const result = await prediction.json();
-    console.log('Replicate API initial response:', result);
-
-    // Check for API-specific error responses
-    if (result.error) {
-      console.error('Replicate API error:', result.error);
-      throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Replicate API error: ${JSON.stringify(error)}`);
     }
 
-    // Poll for completion if the prediction is still processing
-    let finalResult = result;
-    if (result.status === 'starting' || result.status === 'processing') {
-      console.log('Prediction is processing, polling for completion...');
-      
-      // Poll every 2 seconds for up to 30 seconds
-      for (let i = 0; i < 15; i++) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
-          headers: {
-            'Authorization': `Token ${replicateApiToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        finalResult = await pollResponse.json();
-        console.log('Poll response:', finalResult);
-        
-        if (finalResult.status === 'succeeded') {
-          console.log('Prediction completed successfully');
-          break;
-        } else if (finalResult.status === 'failed') {
-          throw new Error(`Prediction failed: ${finalResult.error}`);
-        }
-      }
-    }
+    const prediction = await response.json();
+    console.log('Prediction created:', prediction);
 
-    return new Response(
-      JSON.stringify(finalResult),
-      { 
+    // Poll for completion
+    const maxAttempts = 60;
+    let attempts = 0;
+    let result = prediction;
+
+    while (attempts < maxAttempts && result.status !== "succeeded" && result.status !== "failed") {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        }
+          "Authorization": `Token ${replicateApiToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!pollResponse.ok) {
+        throw new Error(`Failed to check prediction status: ${pollResponse.statusText}`);
       }
-    );
+
+      result = await pollResponse.json();
+      console.log('Prediction status:', result.status);
+      attempts++;
+    }
+
+    if (result.status === "failed") {
+      throw new Error(result.error || "Prediction failed");
+    }
+
+    if (result.status !== "succeeded") {
+      throw new Error("Prediction timed out");
+    }
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   } catch (error) {
     console.error('Error in generate-sfx function:', error);
@@ -98,10 +89,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
