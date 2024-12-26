@@ -17,10 +17,10 @@ export const VideoUpload = () => {
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
     seed: -1,
-    duration: 5,  // Changed default to 5 seconds since most videos are short
-    numSteps: 35, // Increased default steps for better quality
-    cfgStrength: 6.5, // Increased for stronger adherence to prompt
-    negativePrompt: "music, background noise" // Enhanced negative prompt
+    duration: 5,
+    numSteps: 35,
+    cfgStrength: 6.5,
+    negativePrompt: "music, background noise"
   });
   const { toast } = useToast();
 
@@ -47,23 +47,35 @@ export const VideoUpload = () => {
     setProcessedVideoUrl(null);
 
     try {
-      // First, upload the video to Supabase Storage
+      // Get the current session to ensure we're authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error("Authentication required");
+      }
+
+      // Generate a unique filename
+      const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${timestamp}.${fileExt}`;
+
+      // Upload the file
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL of the uploaded video
+      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('videos')
         .getPublicUrl(fileName);
 
       setProcessingStatus("Generating sound effect...");
 
-      // Call the Edge Function with advanced settings
+      // Call the Edge Function
       const { data, error } = await supabase.functions.invoke('generate-sfx', {
         body: {
           videoUrl: publicUrl,
