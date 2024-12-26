@@ -25,8 +25,11 @@ serve(async (req) => {
     // Initialize Replicate API with fetch
     const replicateApiKey = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiKey) {
+      console.error('REPLICATE_API_TOKEN environment variable is not set');
       throw new Error('REPLICATE_API_TOKEN is not set');
     }
+
+    console.log('Replicate API Key exists:', !!replicateApiKey);
 
     // Create prediction using Replicate's REST API directly
     const response = await fetch('https://api.replicate.com/v1/predictions', {
@@ -46,6 +49,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Replicate API error response:', error);
       throw new Error(`Replicate API error: ${JSON.stringify(error)}`);
     }
 
