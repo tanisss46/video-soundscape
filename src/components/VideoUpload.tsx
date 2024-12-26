@@ -17,10 +17,10 @@ export const VideoUpload = () => {
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
     seed: -1,
-    duration: 8,
-    numSteps: 25,
-    cfgStrength: 4.5,
-    negativePrompt: "music"
+    duration: 5,  // Changed default to 5 seconds since most videos are short
+    numSteps: 35, // Increased default steps for better quality
+    cfgStrength: 6.5, // Increased for stronger adherence to prompt
+    negativePrompt: "music, background noise" // Enhanced negative prompt
   });
   const { toast } = useToast();
 
@@ -33,6 +33,13 @@ export const VideoUpload = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    if (!prompt.trim()) {
+      toast({
+        title: "Warning",
+        description: "Adding a descriptive prompt will help generate better sound effects",
+      });
     }
 
     setIsUploading(true);
@@ -60,7 +67,7 @@ export const VideoUpload = () => {
       const { data, error } = await supabase.functions.invoke('generate-sfx', {
         body: {
           videoUrl: publicUrl,
-          prompt: prompt || "default sound",
+          prompt: prompt || "ambient sound matching the video content",
           seed: advancedSettings.seed,
           duration: advancedSettings.duration,
           numSteps: advancedSettings.numSteps,

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 export interface AdvancedSettingsValues {
   seed: number;
@@ -25,7 +26,7 @@ interface AdvancedSettingsProps {
 export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSettingsProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleChange = (field: keyof AdvancedSettingsValues, value: string) => {
+  const handleChange = (field: keyof AdvancedSettingsValues, value: string | number) => {
     onSettingsChange({
       ...settings,
       [field]: field === 'negativePrompt' ? value : Number(value),
@@ -41,7 +42,7 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-6">
           <div className="space-y-2">
             <Label htmlFor="seed">Seed (-1 for random)</Label>
             <Input
@@ -50,7 +51,45 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               value={settings.seed}
               onChange={(e) => handleChange('seed', e.target.value)}
             />
+            <p className="text-sm text-muted-foreground">
+              Use a specific seed to get consistent results, or -1 for random generation
+            </p>
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="cfgStrength">Guidance Strength (CFG)</Label>
+            <div className="pt-2">
+              <Slider
+                id="cfgStrength"
+                min={1}
+                max={10}
+                step={0.1}
+                value={[settings.cfgStrength]}
+                onValueChange={(value) => handleChange('cfgStrength', value[0])}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Higher values (4-7) make the sound more closely match the prompt. Lower values allow more creativity.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="numSteps">Number of Steps</Label>
+            <div className="pt-2">
+              <Slider
+                id="numSteps"
+                min={10}
+                max={50}
+                step={1}
+                value={[settings.numSteps]}
+                onValueChange={(value) => handleChange('numSteps', value[0])}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              More steps (25-50) generally produce better quality but take longer
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="duration">Duration (seconds)</Label>
             <Input
@@ -61,39 +100,23 @@ export const AdvancedSettings = ({ settings, onSettingsChange }: AdvancedSetting
               value={settings.duration}
               onChange={(e) => handleChange('duration', e.target.value)}
             />
+            <p className="text-sm text-muted-foreground">
+              Note: The final duration will be limited by your video length
+            </p>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="numSteps">Number of Steps</Label>
+            <Label htmlFor="negativePrompt">Negative Prompt</Label>
             <Input
-              id="numSteps"
-              type="number"
-              min="1"
-              max="50"
-              value={settings.numSteps}
-              onChange={(e) => handleChange('numSteps', e.target.value)}
+              id="negativePrompt"
+              value={settings.negativePrompt}
+              onChange={(e) => handleChange('negativePrompt', e.target.value)}
+              placeholder="Sounds to avoid (e.g., 'music, talking, background noise')"
             />
+            <p className="text-sm text-muted-foreground">
+              Specify sounds you want to avoid in the generation
+            </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="cfgStrength">CFG Strength</Label>
-            <Input
-              id="cfgStrength"
-              type="number"
-              step="0.1"
-              min="1"
-              max="10"
-              value={settings.cfgStrength}
-              onChange={(e) => handleChange('cfgStrength', e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="negativePrompt">Negative Prompt</Label>
-          <Input
-            id="negativePrompt"
-            value={settings.negativePrompt}
-            onChange={(e) => handleChange('negativePrompt', e.target.value)}
-            placeholder="Enter terms to avoid in generation"
-          />
         </div>
       </CollapsibleContent>
     </Collapsible>
