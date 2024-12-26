@@ -22,8 +22,8 @@ serve(async (req) => {
     console.log('With prompt:', prompt);
 
     // Get the API token and verify it exists
-    const replicateApiKey = Deno.env.get('REPLICATE_API_TOKEN');
-    if (!replicateApiKey) {
+    const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
+    if (!replicateApiToken) {
       console.error('REPLICATE_API_TOKEN is not set');
       throw new Error('REPLICATE_API_TOKEN environment variable is not configured');
     }
@@ -39,7 +39,7 @@ serve(async (req) => {
         response = await fetch('https://api.replicate.com/v1/predictions', {
           method: 'POST',
           headers: {
-            'Authorization': `Token ${replicateApiKey}`,
+            'Authorization': `Token ${replicateApiToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -56,13 +56,12 @@ serve(async (req) => {
           }),
         });
 
-        const responseText = await response.text();
-        console.log('Raw API Response:', responseText);
-        
         if (response.ok) {
-          response = new Response(responseText, response);
           break;
         }
+        
+        const errorText = await response.text();
+        console.error('API Response Error:', errorText);
         
         retries--;
         if (retries > 0) {
@@ -97,7 +96,7 @@ serve(async (req) => {
       
       const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
-          'Authorization': `Token ${replicateApiKey}`,
+          'Authorization': `Token ${replicateApiToken}`,
         },
       });
       
