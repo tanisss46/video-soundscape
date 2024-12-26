@@ -29,7 +29,6 @@ serve(async (req) => {
       headers: {
         'Authorization': `Token ${replicateApiToken}`,
         'Content-Type': 'application/json',
-        'Prefer': 'wait'
       },
       body: JSON.stringify({
         version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
@@ -53,12 +52,6 @@ serve(async (req) => {
     if (result.error) {
       console.error('Replicate API error:', result.error);
       throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
-    }
-
-    // Check if the result has the expected output structure
-    if (!result.output && result.status !== 'succeeded') {
-      console.error('Invalid API response:', result);
-      throw new Error('Invalid or incomplete API response');
     }
 
     return new Response(
