@@ -17,7 +17,7 @@ serve(async (req) => {
 
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiToken) {
-      throw new Error('REPLICATE_API_TOKEN is not configured');
+      throw new Error('REPLICATE_API_TOKEN is not configured in Supabase Edge Function secrets');
     }
 
     // Call Replicate API with exact specifications from their documentation
@@ -48,6 +48,11 @@ serve(async (req) => {
 
     if (!prediction.ok) {
       throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
+    }
+
+    // Check if the result has the expected output structure
+    if (!result.output && result.status !== 'succeeded') {
+      throw new Error('Invalid or incomplete API response');
     }
 
     return new Response(
