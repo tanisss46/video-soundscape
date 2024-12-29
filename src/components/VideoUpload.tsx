@@ -70,18 +70,22 @@ export const VideoUpload = () => {
         .from('videos')
         .getPublicUrl(fileName);
 
-      setProcessingStatus("Generating sound effect...");
+      // Create a record in user_generations table
+      const { data: generationData, error: generationError } = await supabase
+        .from('user_generations')
+        .insert([
+          {
+            prompt: prompt || "ambient sound matching the video content",
+            video_url: publicUrl,
+            status: 'processing'
+          }
+        ])
+        .select()
+        .single();
 
-      // Log the parameters being sent to verify they're correct
-      console.log('Sending parameters to edge function:', {
-        videoUrl: publicUrl,
-        prompt,
-        seed: advancedSettings.seed,
-        duration: advancedSettings.duration,
-        num_steps: advancedSettings.numSteps,
-        cfg_strength: advancedSettings.cfgStrength,
-        negative_prompt: advancedSettings.negativePrompt
-      });
+      if (generationError) throw generationError;
+
+      setProcessingStatus("Generating sound effect...");
 
       const { data, error } = await supabase.functions.invoke('generate-sfx', {
         body: {
@@ -100,6 +104,17 @@ export const VideoUpload = () => {
       console.log('Edge function response:', data);
 
       if (data.output) {
+        // Update the generation record with the processed video
+        const { error: updateError } = await supabase
+          .from('user_generations')
+          .update({
+            status: 'completed',
+            audio_url: data.output
+          })
+          .eq('id', generationData.id);
+
+        if (updateError) throw updateError;
+
         setProcessedVideoUrl(data.output);
         toast({
           title: "Success",
