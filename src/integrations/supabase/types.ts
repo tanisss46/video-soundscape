@@ -38,6 +38,7 @@ export type Database = {
           id: number
           prompt: string
           status: string | null
+          user_id: string | null
           video_url: string | null
         }
         Insert: {
@@ -47,6 +48,7 @@ export type Database = {
           id?: number
           prompt: string
           status?: string | null
+          user_id?: string | null
           video_url?: string | null
         }
         Update: {
@@ -56,6 +58,7 @@ export type Database = {
           id?: number
           prompt?: string
           status?: string | null
+          user_id?: string | null
           video_url?: string | null
         }
         Relationships: []

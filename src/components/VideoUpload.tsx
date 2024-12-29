@@ -70,14 +70,15 @@ export const VideoUpload = () => {
         .from('videos')
         .getPublicUrl(fileName);
 
-      // Create a record in user_generations table
+      // Create a record in user_generations table with user_id
       const { data: generationData, error: generationError } = await supabase
         .from('user_generations')
         .insert([
           {
             prompt: prompt || "ambient sound matching the video content",
             video_url: publicUrl,
-            status: 'processing'
+            status: 'processing',
+            user_id: session.user.id // Add the user_id here
           }
         ])
         .select()
