@@ -3,12 +3,11 @@ import { useToast } from "@/hooks/use-toast";
 import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
 import { UploadButton } from "./upload/UploadButton";
-import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { AdvancedSettings, AdvancedSettingsValues } from "./upload/AdvancedSettings";
-import { Loader2 } from "lucide-react";
+import { ProcessingStatus } from "./upload/ProcessingStatus";
+import { VideoPreview } from "./upload/VideoPreview";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -113,7 +112,6 @@ export const VideoUpload = () => {
         .from('videos')
         .getPublicUrl(fileName);
 
-      // Create a record in user_generations table with user_id
       const { data: generationData, error: generationError } = await supabase
         .from('user_generations')
         .insert([
@@ -121,7 +119,7 @@ export const VideoUpload = () => {
             prompt: prompt || "ambient sound matching the video content",
             video_url: publicUrl,
             status: 'processing',
-            user_id: session.user.id // Add the user_id here
+            user_id: session.user.id
           }
         ])
         .select()
@@ -145,10 +143,7 @@ export const VideoUpload = () => {
 
       if (error) throw error;
 
-      console.log('Edge function response:', data);
-
       if (data.output) {
-        // Update the generation record with the processed video
         const { error: updateError } = await supabase
           .from('user_generations')
           .update({
@@ -187,27 +182,7 @@ export const VideoUpload = () => {
   return (
     <form onSubmit={handleUpload} className="space-y-6">
       <DropZone file={file} setFile={setFile} />
-      <div className="flex gap-4">
-        <PromptInput prompt={prompt} setPrompt={setPrompt} />
-        {processedVideoUrl && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAnalyze}
-            disabled={isAnalyzing}
-            className="mt-8 whitespace-nowrap"
-          >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              "Analyze Video"
-            )}
-          </Button>
-        )}
-      </div>
+      <PromptInput prompt={prompt} setPrompt={setPrompt} />
       <AdvancedSettings 
         settings={advancedSettings}
         onSettingsChange={setAdvancedSettings}
@@ -220,31 +195,17 @@ export const VideoUpload = () => {
         </Alert>
       )}
       {processingStatus && (
-        <div className="space-y-2">
-          <Alert>
-            <AlertDescription>{processingStatus}</AlertDescription>
-          </Alert>
-          <Progress value={isUploading ? 75 : 0} className="h-2" />
-        </div>
+        <ProcessingStatus 
+          status={processingStatus}
+          isUploading={isUploading}
+        />
       )}
       {processedVideoUrl && (
-        <div className="space-y-4">
-          <Alert>
-            <AlertDescription>Your video is ready!</AlertDescription>
-          </Alert>
-          <video 
-            src={processedVideoUrl} 
-            controls 
-            className="w-full rounded-lg border"
-          />
-          <Button 
-            type="button" 
-            className="w-full"
-            onClick={() => window.open(processedVideoUrl, "_blank")}
-          >
-            Download Video
-          </Button>
-        </div>
+        <VideoPreview 
+          videoUrl={processedVideoUrl}
+          isAnalyzing={isAnalyzing}
+          onAnalyze={handleAnalyze}
+        />
       )}
       <UploadButton isUploading={isUploading} disabled={!file} />
     </form>
