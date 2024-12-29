@@ -26,8 +26,8 @@ serve(async (req) => {
 
     // Set default values if parameters are null or undefined
     const defaultSettings = {
-      num_steps: 50,
-      cfg_strength: 7,
+      num_steps: 25, // Changed from 50 to 25
+      cfg_strength: 4.5, // Changed from 7 to 4.5
       seed: -1,
       duration: 10,
     };
