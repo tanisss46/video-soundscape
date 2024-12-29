@@ -2,7 +2,6 @@ import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
 import { AdvancedSettings } from "./upload/AdvancedSettings";
 import { ProcessingStatus } from "./upload/ProcessingStatus";
-import { VideoPreview } from "./upload/VideoPreview";
 import { useVideoUpload } from "@/hooks/use-video-upload";
 import { Button } from "./ui/button";
 import { Loader2 } from "lucide-react";
@@ -70,12 +69,6 @@ export const VideoUpload = () => {
           )}
         </Button>
       </div>
-
-      {file && <VideoPreview 
-        file={file}
-        isAnalyzing={isAnalyzing}
-        isUploading={isUploading}
-      />}
       
       {processingStatus && (
         <ProcessingStatus 
