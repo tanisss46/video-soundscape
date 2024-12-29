@@ -4,6 +4,8 @@ import { AdvancedSettings } from "./upload/AdvancedSettings";
 import { ProcessingStatus } from "./upload/ProcessingStatus";
 import { VideoPreview } from "./upload/VideoPreview";
 import { useVideoUpload } from "@/hooks/use-video-upload";
+import { Button } from "./ui/button";
+import { Loader2 } from "lucide-react";
 
 export const VideoUpload = () => {
   const {
@@ -22,7 +24,7 @@ export const VideoUpload = () => {
   } = useVideoUpload();
 
   return (
-    <div className="w-[70%] mx-auto space-y-6">
+    <div className="w-[80%] mx-auto space-y-6">
       <DropZone file={file} setFile={setFile} />
       
       <PromptInput 
@@ -38,33 +40,41 @@ export const VideoUpload = () => {
       />
 
       <div className="flex flex-col gap-4">
-        <button
+        <Button
           onClick={handleAnalyze}
           disabled={!file || isAnalyzing || isUploading}
-          className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors
-            ${!file ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
-            'bg-primary text-primary-foreground hover:bg-primary/90'}`}
+          variant="secondary"
         >
-          {isAnalyzing ? "Analyzing..." : "Analyze Video"}
-        </button>
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            "Analyze Video"
+          )}
+        </Button>
         
-        <button
+        <Button
           onClick={handleUpload}
-          disabled={!file || !prompt || isAnalyzing || isUploading}
-          className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors
-            ${(!file || !prompt) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
-            'bg-primary text-primary-foreground hover:bg-primary/90'}`}
+          disabled={!file || isUploading}
+          variant="default"
         >
-          {isUploading ? "Processing..." : "Add Sound Effect"}
-        </button>
+          {isUploading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "Add Sound Effect"
+          )}
+        </Button>
       </div>
 
       {file && <VideoPreview 
         file={file}
         isAnalyzing={isAnalyzing}
         isUploading={isUploading}
-        onAnalyze={handleAnalyze}
-        onUpload={handleUpload}
       />}
       
       {processingStatus && (
