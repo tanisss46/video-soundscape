@@ -3,11 +3,11 @@ import { useToast } from "@/hooks/use-toast";
 import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
 import { UploadButton } from "./upload/UploadButton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
 import { AdvancedSettings, AdvancedSettingsValues } from "./upload/AdvancedSettings";
 import { ProcessingStatus } from "./upload/ProcessingStatus";
 import { VideoPreview } from "./upload/VideoPreview";
+import { VideoAnalysis } from "./upload/VideoAnalysis";
+import { supabase } from "@/integrations/supabase/client";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -16,7 +16,6 @@ export const VideoUpload = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
-  const [videoAnalysis, setVideoAnalysis] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
     seed: -1,
     duration: 10,
@@ -28,7 +27,7 @@ export const VideoUpload = () => {
   const { toast } = useToast();
 
   const handleAnalyze = async () => {
-    if (!processedVideoUrl) {
+    if (!file) {
       toast({
         title: "Error",
         description: "Please upload a video first",
@@ -38,17 +37,33 @@ export const VideoUpload = () => {
     }
 
     setIsAnalyzing(true);
-    setVideoAnalysis(null);
 
     try {
+      // First upload the file to get a URL
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `temp_${timestamp}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+
       const { data, error } = await supabase.functions.invoke('analyze-video', {
-        body: { videoUrl: processedVideoUrl }
+        body: { videoUrl: publicUrl }
       });
 
       if (error) throw error;
 
       if (data.output) {
-        setVideoAnalysis(data.output);
         setPrompt(data.output);
         toast({
           title: "Success",
@@ -182,18 +197,17 @@ export const VideoUpload = () => {
   return (
     <form onSubmit={handleUpload} className="space-y-6">
       <DropZone file={file} setFile={setFile} />
+      <VideoPreview file={file} />
+      <VideoAnalysis 
+        file={file}
+        isAnalyzing={isAnalyzing}
+        onAnalyze={handleAnalyze}
+      />
       <PromptInput prompt={prompt} setPrompt={setPrompt} />
       <AdvancedSettings 
         settings={advancedSettings}
         onSettingsChange={setAdvancedSettings}
       />
-      {videoAnalysis && (
-        <Alert>
-          <AlertDescription className="whitespace-pre-wrap">
-            {videoAnalysis}
-          </AlertDescription>
-        </Alert>
-      )}
       {processingStatus && (
         <ProcessingStatus 
           status={processingStatus}
@@ -201,10 +215,10 @@ export const VideoUpload = () => {
         />
       )}
       {processedVideoUrl && (
-        <VideoPreview 
-          videoUrl={processedVideoUrl}
-          isAnalyzing={isAnalyzing}
-          onAnalyze={handleAnalyze}
+        <video 
+          src={processedVideoUrl} 
+          controls 
+          className="w-full rounded-lg border"
         />
       )}
       <UploadButton isUploading={isUploading} disabled={!file} />
