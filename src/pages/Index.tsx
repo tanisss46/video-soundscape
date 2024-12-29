@@ -3,7 +3,6 @@ import { VideoUpload } from "@/components/VideoUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { ActivityPanel } from "@/components/ActivityPanel";
 
 const Index = () => {
   return (
@@ -24,7 +23,6 @@ const Index = () => {
               </Card>
             </div>
           </main>
-          <ActivityPanel />
         </div>
       </div>
     </SidebarProvider>

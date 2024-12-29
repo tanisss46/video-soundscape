@@ -20,13 +20,22 @@ import {
   Moon, 
   LogOut,
   Info,
-  Loader2
+  Loader2,
+  Activity
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 export const Navbar = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>("");
-  const [processingCount, setProcessingCount] = useState<number>(0);
+  const [processingVideos, setProcessingVideos] = useState<any[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const getProfile = async () => {
@@ -53,9 +62,9 @@ export const Navbar = () => {
 
     getProfile();
 
-    // Subscribe to user_generations table for processing status
+    // Subscribe to changes in user_generations table
     const channel = supabase
-      .channel('processing_count')
+      .channel('user_generations_changes')
       .on(
         'postgres_changes',
         {
@@ -64,15 +73,33 @@ export const Navbar = () => {
           table: 'user_generations'
         },
         (payload) => {
-          if (payload.new) {
-            // Update processing count based on status changes
-            supabase
-              .from('user_generations')
-              .select('*', { count: 'exact' })
-              .eq('status', 'processing')
-              .then(({ count }) => {
-                setProcessingCount(count || 0);
+          console.log('Change received!', payload);
+          if (payload.new && payload.eventType === 'INSERT') {
+            setProcessingVideos(prev => [...prev, payload.new]);
+            toast({
+              title: "New Video Processing",
+              description: "Your video is being processed...",
+            });
+          } else if (payload.new && payload.eventType === 'UPDATE') {
+            const updatedVideo = payload.new;
+            setProcessingVideos(prev => 
+              prev.map(video => 
+                video.id === updatedVideo.id ? updatedVideo : video
+              ).filter(video => video.status !== 'completed' && video.status !== 'error')
+            );
+            
+            if (updatedVideo.status === 'completed') {
+              toast({
+                title: "Video Ready!",
+                description: "Your video has been processed successfully.",
               });
+            } else if (updatedVideo.status === 'error') {
+              toast({
+                title: "Processing Error",
+                description: updatedVideo.error_message || "An error occurred while processing your video.",
+                variant: "destructive",
+              });
+            }
           }
         }
       )
@@ -81,7 +108,7 @@ export const Navbar = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [toast]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -92,12 +119,56 @@ export const Navbar = () => {
     <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b w-[calc(100%-10rem)] max-w-[1400px]">
       <div className="px-4 flex items-center justify-end h-12">
         <div className="flex items-center space-x-4">
-          {processingCount > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>{processingCount} video{processingCount > 1 ? 's' : ''} processing</span>
-            </div>
-          )}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+              >
+                <Activity className="h-5 w-5" />
+                {processingVideos.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                    {processingVideos.length}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Activity</h2>
+              </div>
+              <ScrollArea className="h-[calc(100vh-8rem)]">
+                <div className="space-y-4">
+                  {processingVideos.map((video) => (
+                    <div
+                      key={video.id}
+                      className="p-4 rounded-lg border bg-card text-card-foreground"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium">Video Processing</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {video.prompt || "No prompt provided"}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          video.status === 'completed' 
+                            ? 'bg-green-100 text-green-700' 
+                            : video.status === 'error'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {video.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
