@@ -19,17 +19,25 @@ serve(async (req) => {
 
     const { videoUrl, prompt, seed, duration, num_steps, cfg_strength, negative_prompt } = await req.json();
 
+    // Set default values if parameters are null or undefined
+    const defaultSettings = {
+      num_steps: 50,
+      cfg_strength: 7,
+      seed: -1,
+      duration: 10,
+    };
+
     console.log('Received parameters:', {
       videoUrl,
       prompt,
-      seed,
-      duration,
-      num_steps,
-      cfg_strength,
+      seed: seed ?? defaultSettings.seed,
+      duration: duration ?? defaultSettings.duration,
+      num_steps: num_steps ?? defaultSettings.num_steps,
+      cfg_strength: cfg_strength ?? defaultSettings.cfg_strength,
       negative_prompt
     });
 
-    // Create prediction with exact values from frontend
+    // Create prediction with exact values from frontend or defaults
     const response = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
@@ -41,17 +49,18 @@ serve(async (req) => {
         input: {
           video: videoUrl,
           prompt: prompt,
-          seed: parseInt(seed), // Ensure seed is passed as integer
-          duration: parseInt(duration),
-          num_steps: parseInt(num_steps),
-          cfg_strength: parseFloat(cfg_strength),
-          negative_prompt: negative_prompt
+          seed: seed ?? defaultSettings.seed,
+          duration: duration ?? defaultSettings.duration,
+          num_steps: num_steps ?? defaultSettings.num_steps,
+          cfg_strength: cfg_strength ?? defaultSettings.cfg_strength,
+          negative_prompt: negative_prompt || ""
         },
       }),
     });
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Replicate API error:', error);
       throw new Error(`Replicate API error: ${JSON.stringify(error)}`);
     }
 
