@@ -13,6 +13,7 @@ interface ProcessingVideo {
   id: number;
   prompt: string;
   status: string;
+  error_message?: string;  // Added this property as optional
 }
 
 export const ActivityIndicator = () => {
