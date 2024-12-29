@@ -3,12 +3,16 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
@@ -18,6 +22,7 @@ serve(async (req) => {
     }
 
     const { videoUrl, prompt, seed, duration, num_steps, cfg_strength, negative_prompt } = await req.json();
+    console.log('Received request with parameters:', { videoUrl, prompt, seed, duration, num_steps, cfg_strength, negative_prompt });
 
     // Set default values if parameters are null or undefined
     const defaultSettings = {
@@ -26,16 +31,6 @@ serve(async (req) => {
       seed: -1,
       duration: 10,
     };
-
-    console.log('Received parameters:', {
-      videoUrl,
-      prompt,
-      seed: seed ?? defaultSettings.seed,
-      duration: duration ?? defaultSettings.duration,
-      num_steps: num_steps ?? defaultSettings.num_steps,
-      cfg_strength: cfg_strength ?? defaultSettings.cfg_strength,
-      negative_prompt
-    });
 
     // Create prediction with exact values from frontend or defaults
     const response = await fetch("https://api.replicate.com/v1/predictions", {
@@ -68,39 +63,34 @@ serve(async (req) => {
     console.log('Prediction created:', prediction);
 
     // Poll for completion with increased timeout and better error handling
-    const maxAttempts = 180; // Increased to 3 minutes
-    const pollInterval = 2000; // 2 seconds between polls
+    const maxAttempts = 180; // 3 minutes
+    const pollInterval = 2000; // 2 seconds
     let attempts = 0;
     let result = prediction;
 
     while (attempts < maxAttempts && result.status !== "succeeded" && result.status !== "failed") {
       await new Promise(resolve => setTimeout(resolve, pollInterval));
       
-      try {
-        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-          headers: {
-            "Authorization": `Token ${replicateApiToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+        headers: {
+          "Authorization": `Token ${replicateApiToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!pollResponse.ok) {
-          console.error(`Poll request failed with status ${pollResponse.status}`);
-          throw new Error(`Failed to check prediction status: ${pollResponse.statusText}`);
-        }
-
-        result = await pollResponse.json();
-        console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status = ${result.status}`);
-        
-        if (result.status === "failed") {
-          throw new Error(result.error || "Model processing failed");
-        }
-        
-        attempts++;
-      } catch (pollError) {
-        console.error('Error during polling:', pollError);
-        throw new Error(`Polling error: ${pollError.message}`);
+      if (!pollResponse.ok) {
+        console.error(`Poll request failed with status ${pollResponse.status}`);
+        throw new Error(`Failed to check prediction status: ${pollResponse.statusText}`);
       }
+
+      result = await pollResponse.json();
+      console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status = ${result.status}`);
+      
+      if (result.status === "failed") {
+        throw new Error(result.error || "Model processing failed");
+      }
+      
+      attempts++;
     }
 
     if (result.status !== "succeeded") {
@@ -109,6 +99,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200
     });
 
   } catch (error) {
@@ -116,7 +107,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: "The sound effect generation process took longer than expected. Please try again with a shorter video or simpler prompt."
+        details: "An error occurred during sound effect generation. Please try again."
       }),
       { 
         status: 500,
