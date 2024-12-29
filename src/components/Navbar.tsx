@@ -40,16 +40,17 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
-      <div className="container mx-auto flex items-center justify-end h-16">
+    <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b w-full">
+      <div className="container mx-auto flex items-center justify-between h-14">
+        <div className="text-lg font-semibold gradient-text">SoundAI</div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            <Avatar>
+            <Avatar className="h-8 w-8">
               <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium hidden md:block">{username}</span>
           </div>
-          <Button onClick={handleSignOut} variant="ghost">Sign Out</Button>
+          <Button onClick={handleSignOut} variant="ghost" size="sm">Sign Out</Button>
         </div>
       </div>
     </nav>

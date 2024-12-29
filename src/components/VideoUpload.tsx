@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
-import { AdvancedSettings, AdvancedSettingsValues } from "./upload/AdvancedSettings";
+import { AdvancedSettings } from "./upload/AdvancedSettings";
 import { ProcessingStatus } from "./upload/ProcessingStatus";
 import { VideoPreview } from "./upload/VideoPreview";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,14 +14,6 @@ export const VideoUpload = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
-  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
-    seed: -1,
-    duration: 10,
-    numSteps: 50,
-    cfgStrength: 4.5,
-    negativePrompt: "background noise, static"
-  });
-  
   const { toast } = useToast();
 
   const handleAnalyze = async () => {
@@ -79,8 +71,7 @@ export const VideoUpload = () => {
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpload = async () => {
     if (!file) {
       toast({
         title: "Error",
@@ -137,12 +128,7 @@ export const VideoUpload = () => {
       const { data, error } = await supabase.functions.invoke('generate-sfx', {
         body: {
           videoUrl: publicUrl,
-          prompt: prompt || "ambient sound matching the video content",
-          seed: advancedSettings.seed,
-          duration: advancedSettings.duration,
-          num_steps: advancedSettings.numSteps,
-          cfg_strength: advancedSettings.cfgStrength,
-          negative_prompt: advancedSettings.negativePrompt
+          prompt: prompt || "ambient sound matching the video content"
         }
       });
 
@@ -164,8 +150,6 @@ export const VideoUpload = () => {
           title: "Success",
           description: "Video processed successfully!",
         });
-      } else {
-        throw new Error("Invalid API response format");
       }
 
       setFile(null);
@@ -185,20 +169,19 @@ export const VideoUpload = () => {
   };
 
   return (
-    <form onSubmit={handleUpload} className="space-y-6">
+    <div className="space-y-6">
       <DropZone file={file} setFile={setFile} />
       {file && (
         <>
           <VideoPreview 
             file={file}
             isAnalyzing={isAnalyzing}
+            isUploading={isUploading}
             onAnalyze={handleAnalyze}
+            onUpload={handleUpload}
           />
           <PromptInput prompt={prompt} setPrompt={setPrompt} />
-          <AdvancedSettings 
-            settings={advancedSettings}
-            onSettingsChange={setAdvancedSettings}
-          />
+          <AdvancedSettings />
         </>
       )}
       {processingStatus && (
@@ -211,9 +194,9 @@ export const VideoUpload = () => {
         <video 
           src={processedVideoUrl} 
           controls 
-          className="w-full max-w-md mx-auto rounded-lg border"
+          className="w-full max-w-sm mx-auto rounded-lg border"
         />
       )}
-    </form>
+    </div>
   );
 };

@@ -12,8 +12,8 @@ const Index = () => {
         <AppSidebar />
         <div className="flex-1">
           <Navbar />
-          <main className="container mx-auto px-4 pt-24 pb-12">
-            <div className="max-w-2xl mx-auto">
+          <main className="container mx-auto px-4 pt-20 pb-12">
+            <div className="max-w-3xl mx-auto">
               <Card>
                 <CardHeader>
                   <CardTitle>Upload Video</CardTitle>
