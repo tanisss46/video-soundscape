@@ -24,6 +24,8 @@ export const VideoUpload = () => {
 
   return (
     <div className="w-[90%] mx-auto space-y-6">
+      <DropZone file={file} setFile={setFile} />
+      
       <PromptInput 
         prompt={prompt} 
         setPrompt={setPrompt} 
@@ -36,7 +38,12 @@ export const VideoUpload = () => {
         onSettingsChange={handleSettingsChange}
       />
 
-      <DropZone file={file} setFile={setFile} />
+      {processingStatus && (
+        <ProcessingStatus 
+          status={processingStatus === "Uploading video..." ? "Generating Sound Effect..." : processingStatus}
+          isUploading={isUploading}
+        />
+      )}
 
       <div className="flex flex-col gap-4">
         <Button
@@ -71,13 +78,6 @@ export const VideoUpload = () => {
           )}
         </Button>
       </div>
-      
-      {processingStatus && (
-        <ProcessingStatus 
-          status={processingStatus === "Uploading video..." ? "Generating Sound Effect..." : processingStatus}
-          isUploading={isUploading}
-        />
-      )}
       
       {processedVideoUrl && (
         <video 

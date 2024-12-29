@@ -95,7 +95,7 @@ export const ActivityIndicator = () => {
         >
           <Bell className="h-5 w-5" />
           {processingVideos.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">
               {processingVideos.length}
             </span>
           )}
@@ -116,13 +116,7 @@ export const ActivityIndicator = () => {
                   <p className="text-muted-foreground">
                     {video.prompt || "Generating sound effect..."}
                   </p>
-                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-                    video.status === 'completed' 
-                      ? 'bg-green-100 text-green-700' 
-                      : video.status === 'error'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
+                  <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap bg-primary/20 text-primary">
                     {video.status === 'processing' ? 'Generating' : video.status}
                   </span>
                 </div>
