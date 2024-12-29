@@ -40,12 +40,12 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b w-full">
-      <div className="container mx-auto flex items-center justify-between h-14">
+    <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b w-[calc(100%-10rem)]">
+      <div className="px-4 flex items-center justify-between h-12">
         <div className="text-lg font-semibold gradient-text">SoundAI</div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-7 w-7">
               <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium hidden md:block">{username}</span>

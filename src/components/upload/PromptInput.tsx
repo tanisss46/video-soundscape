@@ -10,9 +10,11 @@ import {
 interface PromptInputProps {
   prompt: string;
   setPrompt: (prompt: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
-export const PromptInput = ({ prompt, setPrompt }: PromptInputProps) => {
+export const PromptInput = ({ prompt, setPrompt, disabled, placeholder }: PromptInputProps) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -32,8 +34,10 @@ export const PromptInput = ({ prompt, setPrompt }: PromptInputProps) => {
         id="prompt"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe the sound you want (e.g., 'galloping horses on dirt', 'gentle water flowing')"
+        placeholder={placeholder || "Describe the sound you want (e.g., 'galloping horses on dirt', 'gentle water flowing')"}
         rows={3}
+        disabled={disabled}
+        className={disabled ? "bg-gray-50 cursor-not-allowed" : ""}
       />
     </div>
   );

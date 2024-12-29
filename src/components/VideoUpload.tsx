@@ -22,35 +22,63 @@ export const VideoUpload = () => {
   } = useVideoUpload();
 
   return (
-    <div className="space-y-6">
+    <div className="w-[70%] mx-auto space-y-6">
       <DropZone file={file} setFile={setFile} />
-      {file && (
-        <>
-          <VideoPreview 
-            file={file}
-            isAnalyzing={isAnalyzing}
-            isUploading={isUploading}
-            onAnalyze={handleAnalyze}
-            onUpload={handleUpload}
-          />
-          <PromptInput prompt={prompt} setPrompt={setPrompt} />
-          <AdvancedSettings 
-            settings={settings}
-            onSettingsChange={handleSettingsChange}
-          />
-        </>
-      )}
+      
+      <PromptInput 
+        prompt={prompt} 
+        setPrompt={setPrompt} 
+        disabled={isAnalyzing || isUploading}
+        placeholder="Sound suggestions will appear here after analysis..."
+      />
+      
+      <AdvancedSettings 
+        settings={settings}
+        onSettingsChange={handleSettingsChange}
+      />
+
+      <div className="flex flex-col gap-4">
+        <button
+          onClick={handleAnalyze}
+          disabled={!file || isAnalyzing || isUploading}
+          className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors
+            ${!file ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
+            'bg-primary text-primary-foreground hover:bg-primary/90'}`}
+        >
+          {isAnalyzing ? "Analyzing..." : "Analyze Video"}
+        </button>
+        
+        <button
+          onClick={handleUpload}
+          disabled={!file || !prompt || isAnalyzing || isUploading}
+          className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors
+            ${(!file || !prompt) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
+            'bg-primary text-primary-foreground hover:bg-primary/90'}`}
+        >
+          {isUploading ? "Processing..." : "Add Sound Effect"}
+        </button>
+      </div>
+
+      {file && <VideoPreview 
+        file={file}
+        isAnalyzing={isAnalyzing}
+        isUploading={isUploading}
+        onAnalyze={handleAnalyze}
+        onUpload={handleUpload}
+      />}
+      
       {processingStatus && (
         <ProcessingStatus 
           status={processingStatus}
           isUploading={isUploading}
         />
       )}
+      
       {processedVideoUrl && (
         <video 
           src={processedVideoUrl} 
           controls 
-          className="w-full max-w-sm mx-auto rounded-lg border"
+          className="w-full rounded-lg border"
         />
       )}
     </div>
