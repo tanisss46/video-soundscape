@@ -8,13 +8,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { AdvancedSettings, AdvancedSettingsValues } from "./upload/AdvancedSettings";
+import { Loader2 } from "lucide-react";
 
 export const VideoUpload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [prompt, setPrompt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
+  const [videoAnalysis, setVideoAnalysis] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
     seed: -1,
     duration: 10,
@@ -24,6 +27,46 @@ export const VideoUpload = () => {
   });
   
   const { toast } = useToast();
+
+  const handleAnalyze = async () => {
+    if (!processedVideoUrl) {
+      toast({
+        title: "Error",
+        description: "Please upload a video first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setVideoAnalysis(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-video', {
+        body: { videoUrl: processedVideoUrl }
+      });
+
+      if (error) throw error;
+
+      if (data.output) {
+        setVideoAnalysis(data.output);
+        setPrompt(data.output);
+        toast({
+          title: "Success",
+          description: "Video analysis completed",
+        });
+      }
+    } catch (error: any) {
+      console.error("Analysis error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,11 +187,38 @@ export const VideoUpload = () => {
   return (
     <form onSubmit={handleUpload} className="space-y-6">
       <DropZone file={file} setFile={setFile} />
-      <PromptInput prompt={prompt} setPrompt={setPrompt} />
+      <div className="flex gap-4">
+        <PromptInput prompt={prompt} setPrompt={setPrompt} />
+        {processedVideoUrl && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAnalyze}
+            disabled={isAnalyzing}
+            className="mt-8 whitespace-nowrap"
+          >
+            {isAnalyzing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              "Analyze Video"
+            )}
+          </Button>
+        )}
+      </div>
       <AdvancedSettings 
         settings={advancedSettings}
         onSettingsChange={setAdvancedSettings}
       />
+      {videoAnalysis && (
+        <Alert>
+          <AlertDescription className="whitespace-pre-wrap">
+            {videoAnalysis}
+          </AlertDescription>
+        </Alert>
+      )}
       {processingStatus && (
         <div className="space-y-2">
           <Alert>
