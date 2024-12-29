@@ -1,172 +1,25 @@
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { DropZone } from "./upload/DropZone";
 import { PromptInput } from "./upload/PromptInput";
 import { AdvancedSettings } from "./upload/AdvancedSettings";
 import { ProcessingStatus } from "./upload/ProcessingStatus";
 import { VideoPreview } from "./upload/VideoPreview";
-import { supabase } from "@/integrations/supabase/client";
+import { useVideoUpload } from "@/hooks/use-video-upload";
 
 export const VideoUpload = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [prompt, setPrompt] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState<string | null>(null);
-  const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const handleAnalyze = async () => {
-    if (!file) {
-      toast({
-        title: "Error",
-        description: "Please upload a video first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsAnalyzing(true);
-
-    try {
-      const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `temp_${timestamp}.${fileExt}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(fileName);
-
-      const { data, error } = await supabase.functions.invoke('analyze-video', {
-        body: { videoUrl: publicUrl }
-      });
-
-      if (error) throw error;
-
-      if (data.output) {
-        setPrompt(data.output);
-        toast({
-          title: "Success",
-          description: "Video analysis completed",
-        });
-      }
-    } catch (error: any) {
-      console.error("Analysis error:", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      toast({
-        title: "Error",
-        description: "Please select a video file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    setProcessingStatus("Uploading video...");
-    setProcessedVideoUrl(null);
-
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        throw new Error("Authentication required");
-      }
-
-      const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${timestamp}.${fileExt}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(fileName);
-
-      const { data: generationData, error: generationError } = await supabase
-        .from('user_generations')
-        .insert([
-          {
-            prompt: prompt || "ambient sound matching the video content",
-            video_url: publicUrl,
-            status: 'processing',
-            user_id: session.user.id
-          }
-        ])
-        .select()
-        .single();
-
-      if (generationError) throw generationError;
-
-      setProcessingStatus("Generating sound effect...");
-
-      const { data, error } = await supabase.functions.invoke('generate-sfx', {
-        body: {
-          videoUrl: publicUrl,
-          prompt: prompt || "ambient sound matching the video content"
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.output) {
-        const { error: updateError } = await supabase
-          .from('user_generations')
-          .update({
-            status: 'completed',
-            audio_url: data.output
-          })
-          .eq('id', generationData.id);
-
-        if (updateError) throw updateError;
-
-        setProcessedVideoUrl(data.output);
-        toast({
-          title: "Success",
-          description: "Video processed successfully!",
-        });
-      }
-
-      setFile(null);
-      setPrompt("");
-      setProcessingStatus(null);
-    } catch (error: any) {
-      console.error("Upload error:", error);
-      setProcessingStatus("Error occurred during processing");
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  const {
+    file,
+    setFile,
+    prompt,
+    setPrompt,
+    isUploading,
+    isAnalyzing,
+    processingStatus,
+    processedVideoUrl,
+    settings,
+    handleSettingsChange,
+    handleAnalyze,
+    handleUpload,
+  } = useVideoUpload();
 
   return (
     <div className="space-y-6">
@@ -181,7 +34,10 @@ export const VideoUpload = () => {
             onUpload={handleUpload}
           />
           <PromptInput prompt={prompt} setPrompt={setPrompt} />
-          <AdvancedSettings />
+          <AdvancedSettings 
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+          />
         </>
       )}
       {processingStatus && (
