@@ -24,8 +24,6 @@ export const VideoUpload = () => {
 
   return (
     <div className="w-[90%] mx-auto space-y-6">
-      <DropZone file={file} setFile={setFile} />
-      
       <PromptInput 
         prompt={prompt} 
         setPrompt={setPrompt} 
@@ -37,6 +35,8 @@ export const VideoUpload = () => {
         settings={settings}
         onSettingsChange={handleSettingsChange}
       />
+
+      <DropZone file={file} setFile={setFile} />
 
       <div className="flex flex-col gap-4">
         <Button
@@ -64,7 +64,7 @@ export const VideoUpload = () => {
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Adding Sound...
+              Generating Sound Effect...
             </>
           ) : (
             "Add Sound Effect"
@@ -74,7 +74,7 @@ export const VideoUpload = () => {
       
       {processingStatus && (
         <ProcessingStatus 
-          status={processingStatus}
+          status={processingStatus === "Uploading video..." ? "Generating Sound Effect..." : processingStatus}
           isUploading={isUploading}
         />
       )}

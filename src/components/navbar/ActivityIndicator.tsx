@@ -13,7 +13,7 @@ interface ProcessingVideo {
   id: number;
   prompt: string;
   status: string;
-  error_message?: string;  // Added this property as optional
+  error_message?: string;
 }
 
 export const ActivityIndicator = () => {
@@ -21,6 +21,24 @@ export const ActivityIndicator = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    const fetchProcessingVideos = async () => {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (currentUser?.user) {
+        const { data } = await supabase
+          .from('user_generations')
+          .select('*')
+          .eq('user_id', currentUser.user.id)
+          .in('status', ['processing', 'analyzing'])
+          .order('id', { ascending: false });
+        
+        if (data) {
+          setProcessingVideos(data);
+        }
+      }
+    };
+
+    fetchProcessingVideos();
+
     const channel = supabase
       .channel('user_generations_changes')
       .on(
@@ -34,8 +52,8 @@ export const ActivityIndicator = () => {
           if (payload.new && payload.eventType === 'INSERT') {
             setProcessingVideos(prev => [...prev, payload.new as ProcessingVideo]);
             toast({
-              title: "New Video Processing",
-              description: "Your video is being processed...",
+              title: "Processing Started",
+              description: "Your sound effect is being generated...",
             });
           } else if (payload.new && payload.eventType === 'UPDATE') {
             const updatedVideo = payload.new as ProcessingVideo;
@@ -47,7 +65,7 @@ export const ActivityIndicator = () => {
             
             if (updatedVideo.status === 'completed') {
               toast({
-                title: "Video Ready!",
+                title: "Sound Effect Ready!",
                 description: "Your video has been processed successfully.",
               });
             } else if (updatedVideo.status === 'error') {
@@ -67,8 +85,6 @@ export const ActivityIndicator = () => {
     };
   }, [toast]);
 
-  if (processingVideos.length === 0) return null;
-
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
@@ -78,35 +94,41 @@ export const ActivityIndicator = () => {
           className="relative"
         >
           <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-            {processingVideos.length}
-          </span>
+          {processingVideos.length > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+              {processingVideos.length}
+            </span>
+          )}
         </Button>
       </HoverCardTrigger>
       <HoverCardContent align="end" className="w-80">
         <div className="space-y-2">
           <h4 className="text-sm font-semibold">Active Processes</h4>
-          {processingVideos.map((video) => (
-            <div
-              key={video.id}
-              className="text-sm p-2 rounded-lg border bg-card"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-muted-foreground">
-                  {video.prompt || "Processing video..."}
-                </p>
-                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-                  video.status === 'completed' 
-                    ? 'bg-green-100 text-green-700' 
-                    : video.status === 'error'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {video.status}
-                </span>
+          {processingVideos.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No active processes</p>
+          ) : (
+            processingVideos.map((video) => (
+              <div
+                key={video.id}
+                className="text-sm p-2 rounded-lg border bg-card"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-muted-foreground">
+                    {video.prompt || "Generating sound effect..."}
+                  </p>
+                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                    video.status === 'completed' 
+                      ? 'bg-green-100 text-green-700' 
+                      : video.status === 'error'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {video.status === 'processing' ? 'Generating' : video.status}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </HoverCardContent>
     </HoverCard>
