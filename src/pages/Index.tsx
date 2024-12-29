@@ -15,7 +15,7 @@ const Index = () => {
             <div className="max-w-5xl mx-auto">
               <Card>
                 <CardHeader>
-                  <CardTitle>Upload Video</CardTitle>
+                  <CardTitle>Sound Effect to Video</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <VideoUpload />
