@@ -67,35 +67,44 @@ serve(async (req) => {
     const prediction = await response.json();
     console.log('Prediction created:', prediction);
 
-    // Poll for completion
-    const maxAttempts = 60;
+    // Poll for completion with increased timeout and better error handling
+    const maxAttempts = 180; // Increased to 3 minutes
+    const pollInterval = 2000; // 2 seconds between polls
     let attempts = 0;
     let result = prediction;
 
     while (attempts < maxAttempts && result.status !== "succeeded" && result.status !== "failed") {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-        headers: {
-          "Authorization": `Token ${replicateApiToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      
+      try {
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+          headers: {
+            "Authorization": `Token ${replicateApiToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!pollResponse.ok) {
-        throw new Error(`Failed to check prediction status: ${pollResponse.statusText}`);
+        if (!pollResponse.ok) {
+          console.error(`Poll request failed with status ${pollResponse.status}`);
+          throw new Error(`Failed to check prediction status: ${pollResponse.statusText}`);
+        }
+
+        result = await pollResponse.json();
+        console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status = ${result.status}`);
+        
+        if (result.status === "failed") {
+          throw new Error(result.error || "Model processing failed");
+        }
+        
+        attempts++;
+      } catch (pollError) {
+        console.error('Error during polling:', pollError);
+        throw new Error(`Polling error: ${pollError.message}`);
       }
-
-      result = await pollResponse.json();
-      console.log('Prediction status:', result.status);
-      attempts++;
-    }
-
-    if (result.status === "failed") {
-      throw new Error(result.error || "Prediction failed");
     }
 
     if (result.status !== "succeeded") {
-      throw new Error("Prediction timed out");
+      throw new Error(`Processing timeout after ${maxAttempts * (pollInterval/1000)} seconds`);
     }
 
     return new Response(JSON.stringify(result), {
@@ -105,7 +114,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in generate-sfx function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "The sound effect generation process took longer than expected. Please try again with a shorter video or simpler prompt."
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
