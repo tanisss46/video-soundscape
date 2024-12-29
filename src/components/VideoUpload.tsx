@@ -23,13 +23,13 @@ export const VideoUpload = () => {
   } = useVideoUpload();
 
   return (
-    <div className="w-[80%] mx-auto space-y-6">
+    <div className="w-[90%] mx-auto space-y-6">
       <DropZone file={file} setFile={setFile} />
       
       <PromptInput 
         prompt={prompt} 
         setPrompt={setPrompt} 
-        disabled={isAnalyzing || isUploading}
+        disabled={isAnalyzing}
         placeholder="Sound suggestions will appear here after analysis..."
       />
       
@@ -41,8 +41,9 @@ export const VideoUpload = () => {
       <div className="flex flex-col gap-4">
         <Button
           onClick={handleAnalyze}
-          disabled={!file || isAnalyzing || isUploading}
+          disabled={!file || isAnalyzing}
           variant="secondary"
+          className="relative"
         >
           {isAnalyzing ? (
             <>
@@ -58,11 +59,12 @@ export const VideoUpload = () => {
           onClick={handleUpload}
           disabled={!file || isUploading}
           variant="default"
+          className="relative"
         >
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              Adding Sound...
             </>
           ) : (
             "Add Sound Effect"

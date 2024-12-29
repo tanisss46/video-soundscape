@@ -22,13 +22,11 @@ import {
   Info,
   Loader2
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export const Navbar = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>("");
   const [processingCount, setProcessingCount] = useState<number>(0);
-  const { toast } = useToast();
 
   useEffect(() => {
     const getProfile = async () => {
@@ -91,7 +89,7 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b w-[calc(100%-10rem)]">
+    <nav className="fixed top-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b w-[calc(100%-10rem)] max-w-[1400px]">
       <div className="px-4 flex items-center justify-end h-12">
         <div className="flex items-center space-x-4">
           {processingCount > 0 && (

@@ -11,10 +11,10 @@ export const useVideoUpload = () => {
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
   const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
   const [settings, setSettings] = useState<AdvancedSettingsValues>({
-    seed: -1,
+    seed: 0,
     duration: 10,
-    numSteps: 50,
-    cfgStrength: 7,
+    numSteps: 25,
+    cfgStrength: 4.5,
     negativePrompt: "",
   });
 
