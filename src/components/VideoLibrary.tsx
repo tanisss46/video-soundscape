@@ -6,6 +6,18 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+type UserGeneration = {
+  audio_url: string | null;
+};
+
+type VideoWithGenerations = {
+  id: string;
+  title: string;
+  video_url: string;
+  created_at: string;
+  user_generations: UserGeneration[] | null;
+};
+
 type Video = {
   id: string;
   title: string;
@@ -38,7 +50,7 @@ export const VideoLibrary = () => {
       if (error) throw error;
 
       // Transform the data to include the audio_url from the latest generation
-      const transformedData = data.map(video => ({
+      const transformedData = (data as VideoWithGenerations[]).map(video => ({
         ...video,
         audio_url: video.user_generations?.[0]?.audio_url || null
       }));
