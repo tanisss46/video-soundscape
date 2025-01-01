@@ -16,15 +16,6 @@ export const VideoCard = ({ video }: VideoCardProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
   const handleMouseEnter = () => {
     setIsHovered(true);
     if (audioUrl) {
@@ -34,7 +25,9 @@ export const VideoCard = ({ video }: VideoCardProps) => {
       });
     }
     if (videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(error => {
+        console.error("Video playback error:", error);
+      });
     }
   };
 

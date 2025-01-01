@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2 } from "lucide-react";
 import { Video } from "@/types/video";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 interface VideoCardProps {
   video: Video;
@@ -22,30 +22,38 @@ export const VideoCard = ({
   onDelete,
 }: VideoCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
-  useEffect(() => {
+  const handleMouseEnter = () => {
+    setIsHovered(true);
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.play();
-      } else {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-      }
+      videoRef.current.play().catch(error => {
+        console.error("Video playback error:", error);
+      });
     }
-  }, [isPlaying]);
+    onMouseEnter();
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+    onMouseLeave();
+  };
 
   return (
     <Card 
       className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <CardContent className="p-0 relative">
         <video 
           ref={videoRef}
           src={video.video_url} 
           className="w-full aspect-video object-cover cursor-pointer"
-          controls={false}
           loop
           muted
           playsInline
