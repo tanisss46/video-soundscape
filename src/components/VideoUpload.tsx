@@ -1,91 +1,93 @@
-import { DropZone } from "./upload/DropZone";
-import { PromptInput } from "./upload/PromptInput";
-import { AdvancedSettings } from "./upload/AdvancedSettings";
-import { ProcessingStatus } from "./upload/ProcessingStatus";
-import { useVideoUpload } from "@/hooks/use-video-upload";
-import { Button } from "./ui/button";
-import { Loader2 } from "lucide-react";
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export const VideoUpload = () => {
-  const {
-    file,
-    setFile,
-    prompt,
-    setPrompt,
-    isUploading,
-    isAnalyzing,
-    processingStatus,
-    processedVideoUrl,
-    settings,
-    handleSettingsChange,
-    handleAnalyze,
-    handleUpload,
-  } = useVideoUpload();
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch user credits
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single();
+      
+      return profile;
+    }
+  });
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (!userProfile || userProfile.credits < 1) {
+      toast({
+        title: "Insufficient credits",
+        description: "Please purchase more credits or upgrade your plan.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      acceptedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const { data, error } = await supabase.storage
+        .from("videos")
+        .upload(`public/${acceptedFiles[0].name}`, formData);
+
+      if (error) throw error;
+
+      // After successful processing, deduct one credit
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ credits: userProfile.credits - 1 })
+          .eq('id', user.id);
+
+        toast({
+          title: "Success",
+          description: `1 credit used. Remaining credits: ${userProfile.credits - 1}`,
+        });
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your video.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  }, [userProfile, toast]);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: {
+      'video/*': [],
+    },
+  });
 
   return (
-    <div className="w-[90%] mx-auto space-y-6">
-      <DropZone file={file} setFile={setFile} />
-      
-      <PromptInput 
-        prompt={prompt} 
-        setPrompt={setPrompt} 
-        disabled={isAnalyzing}
-        placeholder="Sound suggestions will appear here after analysis..."
-      />
-      
-      <AdvancedSettings 
-        settings={settings}
-        onSettingsChange={handleSettingsChange}
-      />
-
-      {processingStatus && (
-        <ProcessingStatus 
-          status={processingStatus === "Uploading video..." ? "Generating Sound Effect..." : processingStatus}
-          isUploading={isUploading}
-        />
-      )}
-
-      <div className="flex flex-col gap-4">
-        <Button
-          onClick={handleAnalyze}
-          disabled={!file || isAnalyzing}
-          variant="secondary"
-          className="relative"
-        >
-          {isAnalyzing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            "Analyze Video"
-          )}
-        </Button>
-        
-        <Button
-          onClick={handleUpload}
-          disabled={!file || isUploading}
-          variant="default"
-          className="relative"
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating Sound Effect...
-            </>
-          ) : (
-            "Add Sound Effect"
-          )}
-        </Button>
-      </div>
-      
-      {processedVideoUrl && (
-        <video 
-          src={processedVideoUrl} 
-          controls 
-          className="w-full rounded-lg border"
-        />
-      )}
+    <div {...getRootProps()} className="border-dashed border-2 border-gray-300 p-4 text-center">
+      <input {...getInputProps()} />
+      <p>Drag 'n' drop some files here, or click to select files</p>
+      <Button disabled={isUploading} className="mt-4">
+        {isUploading ? 'Uploading...' : 'Upload Video'}
+      </Button>
     </div>
   );
 };
