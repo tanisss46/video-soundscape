@@ -33,8 +33,14 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     if (audioUrl && isSoundEnabled) {
       if (!audioRef.current) {
         audioRef.current = new Audio(audioUrl);
+        audioRef.current.volume = 1;
       }
-      audioRef.current.play();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Audio playback error:", error);
+        });
+      }
     }
     if (videoRef.current) {
       videoRef.current.play();
@@ -57,7 +63,12 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     e.stopPropagation();
     setIsSoundEnabled(!isSoundEnabled);
     if (!isSoundEnabled && isHovered && audioRef.current && audioUrl) {
-      audioRef.current.play();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Audio playback error:", error);
+        });
+      }
     } else if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
