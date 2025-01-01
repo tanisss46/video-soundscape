@@ -75,6 +75,7 @@ const AppRoutes = () => {
           <Explore />
         </AppLayout>
       } />
+      <Route path="*" element={<Navigate to="/explore" replace />} />
     </Routes>
   );
 };
