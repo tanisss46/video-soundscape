@@ -3,8 +3,12 @@ import { CategoryTabs } from "@/components/explore/CategoryTabs";
 import { SearchInput } from "@/components/explore/SearchInput";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Explore() {
+  const navigate = useNavigate();
+  
   const { data: videos, isLoading } = useQuery({
     queryKey: ['videos'],
     queryFn: async () => {
@@ -31,14 +35,21 @@ export default function Explore() {
       <div className="container px-4 py-8">
         <div className="flex flex-col gap-8">
           {/* Hero Section */}
-          <div className="text-center space-y-4 py-12">
+          <div className="text-center space-y-6 py-12">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
               Next-Generation
               <span className="gradient-text"> AI Sound Effects</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover and create amazing AI-generated sound effects for your videos
+              Easily add AI-generated sound effects to your videos. Upload your clip and let our AI do the rest.
             </p>
+            <Button 
+              size="lg" 
+              className="mt-4"
+              onClick={() => navigate('/create-sound-effect')}
+            >
+              Create Sound Effect
+            </Button>
           </div>
 
           {/* Search and Filters */}
