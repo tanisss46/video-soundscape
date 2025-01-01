@@ -41,21 +41,27 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/auth" replace />;
 };
 
+const AppRoutes = () => {
+  return (
+    <Routes>
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+      <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+    </Routes>
+  );
+};
+
 const App = () => {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <Routes>
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
-          </Routes>
+          <AppRoutes />
         </TooltipProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
