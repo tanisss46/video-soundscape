@@ -84,7 +84,9 @@ export const VideoCard = ({
   const confirmDelete = () => {
     onDelete();
     setShowDeleteDialog(false);
-    toast.success("Video deleted successfully");
+    toast.success("Video deleted successfully", {
+      className: "bg-green-500 text-white border-green-600",
+    });
   };
 
   return (

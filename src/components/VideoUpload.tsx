@@ -226,8 +226,9 @@ export const VideoUpload = ({
           queryClient.invalidateQueries({ queryKey: ['videos'] });
 
           toast({
+            variant: "success",
             title: "Success",
-            description: "Sound effect generated successfully!",
+            description: "Video processing completed!",
           });
 
           if (onAfterProcess) {
@@ -245,9 +246,9 @@ export const VideoUpload = ({
     } catch (error: any) {
       console.error("Error processing video:", error);
       toast({
+        variant: "error",
         title: "Error",
-        description: "Failed to process video. Please try again.",
-        variant: "destructive",
+        description: error.message || "Failed to process video. Please try again.",
       });
       setIsProcessing(false);
     }

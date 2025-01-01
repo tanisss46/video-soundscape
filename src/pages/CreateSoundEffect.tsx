@@ -38,10 +38,8 @@ export default function CreateSoundEffect() {
     if (userCredits === null) return false;
     
     if (userCredits < 1) {
-      toast({
-        title: "Insufficient Credits",
-        description: "Please purchase more credits or upgrade your plan.",
-        variant: "destructive",
+      toast.error("Error: Insufficient credits", {
+        className: "bg-red-500 text-white border-red-600",
       });
       return false;
     }
@@ -72,11 +70,8 @@ export default function CreateSoundEffect() {
     setCompletedSteps(prev => [...prev, 3]);
     setIsProcessing(false);
     
-    toast({
-      title: "Success!",
-      description: "Your video with sound effect is ready! You can download it now.",
-      variant: "default",
-      className: "bg-green-500 text-white",
+    toast.success("Video processing completed!", {
+      className: "bg-green-500 text-white border-green-600",
     });
   };
 
