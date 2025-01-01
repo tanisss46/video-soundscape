@@ -3,6 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Download, Trash2 } from "lucide-react";
 import { Video } from "@/types/video";
 import { useState, useRef } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface VideoCardProps {
   video: Video;
@@ -23,6 +34,7 @@ export const VideoCard = ({
 }: VideoCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleMouseEnter = () => {
@@ -66,55 +78,86 @@ export const VideoCard = ({
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
     onDelete();
+    setShowDeleteDialog(false);
   };
 
   return (
-    <Card 
-      className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <CardContent className="p-0 relative">
-        <video 
-          ref={videoRef}
-          src={video.video_url} 
-          className="w-full aspect-video object-cover cursor-pointer"
-          loop
-          muted
-          playsInline
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/80 hover:text-white hover:bg-white/20"
-              onClick={handleDownloadClick}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/80 hover:text-white hover:bg-white/20"
-              onClick={handleDeleteClick}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+    <>
+      <Card 
+        className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <CardContent className="p-0 relative">
+          <video 
+            ref={videoRef}
+            src={video.video_url} 
+            className="w-full aspect-video object-cover cursor-pointer"
+            loop
+            muted
+            playsInline
+          />
+          {video.audio_url && (
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-purple-600 text-white hover:bg-purple-700">
+                AI Sound
+              </Badge>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white/80 hover:text-white hover:bg-white/20"
+                onClick={handleDownloadClick}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white/80 hover:text-white hover:bg-white/20"
+                onClick={handleDeleteClick}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {isPlaying && video.audio_url && (
-          <div className="absolute top-2 right-2">
-            <span className="text-xs bg-black/60 text-white px-2 py-1 rounded-full animate-pulse">
-              ♪ Playing sound effects...
-            </span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {isPlaying && video.audio_url && (
+            <div className="absolute top-2 right-2">
+              <span className="text-xs bg-black/60 text-white px-2 py-1 rounded-full animate-pulse">
+                ♪ Playing sound effects...
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this video?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

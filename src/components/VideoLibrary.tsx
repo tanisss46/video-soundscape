@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Film, Heart, Upload } from "lucide-react";
+import { Film } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoGrid } from "./videos/VideoGrid";
@@ -38,44 +38,14 @@ export const VideoLibrary = () => {
 
   return (
     <Tabs defaultValue="all" className="w-full space-y-8">
-      <TabsList className="grid w-full grid-cols-3 bg-accent/50">
+      <TabsList className="grid w-full grid-cols-1 bg-accent/50">
         <TabsTrigger value="all" className="flex items-center gap-2">
           <Film className="h-4 w-4" />
           All Videos
         </TabsTrigger>
-        <TabsTrigger value="favorites" className="flex items-center gap-2">
-          <Heart className="h-4 w-4" />
-          Favorites
-        </TabsTrigger>
-        <TabsTrigger value="uploads" className="flex items-center gap-2">
-          <Upload className="h-4 w-4" />
-          My Creations
-        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="all">
-        <VideoGrid
-          videos={videos}
-          currentlyPlayingId={currentlyPlayingId}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onDownload={handleDownload}
-          onDelete={handleDelete}
-        />
-      </TabsContent>
-      
-      <TabsContent value="favorites">
-        <VideoGrid
-          videos={videos?.filter(() => false)}
-          currentlyPlayingId={currentlyPlayingId}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onDownload={handleDownload}
-          onDelete={handleDelete}
-        />
-      </TabsContent>
-      
-      <TabsContent value="uploads">
         <VideoGrid
           videos={videos}
           currentlyPlayingId={currentlyPlayingId}

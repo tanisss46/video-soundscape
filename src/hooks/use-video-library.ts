@@ -38,7 +38,6 @@ export const useVideoLibrary = () => {
 
   const handleDownload = async (videoUrl: string, audioUrl?: string) => {
     try {
-      // If we have an audio URL, use that as the video URL since it contains both video and audio
       const finalVideoUrl = audioUrl || videoUrl;
       
       const response = await fetch(finalVideoUrl);
@@ -83,6 +82,8 @@ export const useVideoLibrary = () => {
       toast({
         title: "Success",
         description: "Video deleted successfully",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
       });
     } catch (error) {
       toast({
