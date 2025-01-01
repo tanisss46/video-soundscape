@@ -40,12 +40,6 @@ export const VideoProcessor = ({
 
   return (
     <div className="space-y-4">
-      <VideoAnalysis
-        file={file}
-        isAnalyzing={isAnalyzing}
-        onAnalyze={onAnalyze}
-      />
-
       <PromptInput
         prompt={prompt}
         setPrompt={setPrompt}
@@ -56,6 +50,12 @@ export const VideoProcessor = ({
       <AdvancedSettings
         settings={advancedSettings}
         onSettingsChange={setAdvancedSettings}
+      />
+
+      <VideoAnalysis
+        file={file}
+        isAnalyzing={isAnalyzing}
+        onAnalyze={onAnalyze}
       />
 
       <Button
