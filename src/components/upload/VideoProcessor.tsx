@@ -36,19 +36,11 @@ export const VideoProcessor = ({
     negativePrompt: "",
   });
 
-  // Update prompt when analysis result changes
   useEffect(() => {
     if (analysisResult) {
       setPrompt(analysisResult);
     }
   }, [analysisResult]);
-
-  const handleProcess = async () => {
-    if (file && !prompt) {
-      await onAnalyze();
-    }
-    onProcess(prompt, advancedSettings);
-  };
 
   return (
     <div className="space-y-4">
@@ -65,6 +57,26 @@ export const VideoProcessor = ({
         />
       )}
 
+      <Button
+        className="w-full"
+        size="lg"
+        onClick={onAnalyze}
+        disabled={disabled || isUploading || isProcessing || isAnalyzing}
+        variant="secondary"
+      >
+        {isAnalyzing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Analyzing Video...
+          </>
+        ) : (
+          <>
+            <Scan className="mr-2 h-4 w-4" />
+            Analyze Video
+          </>
+        )}
+      </Button>
+
       <PromptInput
         prompt={prompt}
         setPrompt={setPrompt}
@@ -80,7 +92,7 @@ export const VideoProcessor = ({
       <Button
         className="w-full"
         size="lg"
-        onClick={handleProcess}
+        onClick={() => onProcess(prompt, advancedSettings)}
         disabled={disabled || isUploading || isProcessing || isAnalyzing}
       >
         {isUploading ? (
@@ -93,13 +105,8 @@ export const VideoProcessor = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
           </>
-        ) : isAnalyzing ? (
-          <>
-            <Scan className="mr-2 h-4 w-4" />
-            Analyzing Video...
-          </>
         ) : (
-          prompt ? "Generate Sound Effect" : "Analyze & Generate Sound Effect"
+          "Generate Sound Effect"
         )}
       </Button>
     </div>
