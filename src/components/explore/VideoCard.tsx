@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface VideoCardProps {
   video: {
@@ -14,18 +14,35 @@ interface VideoCardProps {
 
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, []);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
     if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.play();
+      if (!audioRef.current) {
+        audioRef.current = new Audio(audioUrl);
+      }
+      audioRef.current.play();
     }
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   return (
@@ -45,7 +62,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
         />
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium truncate">
+            <p className="text-sm font-medium truncate text-white">
               {new Date(video.created_at).toLocaleDateString()}
             </p>
             <button className="text-white/80 hover:text-white transition-colors">
