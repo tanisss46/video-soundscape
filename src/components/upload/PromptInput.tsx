@@ -18,14 +18,14 @@ export const PromptInput = ({ prompt, setPrompt, disabled, placeholder }: Prompt
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Label htmlFor="prompt">Sound Description</Label>
+        <Label htmlFor="prompt">Sound Description (Optional)</Label>
         <Tooltip>
           <TooltipTrigger asChild>
             <InfoIcon className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors cursor-help" />
           </TooltipTrigger>
           <TooltipContent>
             <p className="max-w-xs text-sm">
-              For best results, be specific and descriptive about the sound you want. Include details about the environment and materials involved.
+              You can describe the sound you want, or let us analyze the video to generate a matching sound automatically.
             </p>
           </TooltipContent>
         </Tooltip>
@@ -34,7 +34,7 @@ export const PromptInput = ({ prompt, setPrompt, disabled, placeholder }: Prompt
         id="prompt"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder={placeholder || "Describe the sound you want (e.g., 'galloping horses on dirt', 'gentle water flowing')"}
+        placeholder={placeholder || "Leave empty for automatic sound generation based on video content"}
         rows={3}
         disabled={disabled}
         className={disabled ? "bg-gray-50 cursor-not-allowed" : ""}

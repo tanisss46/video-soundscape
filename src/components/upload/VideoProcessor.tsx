@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
 import { VideoAnalysis } from "./VideoAnalysis";
+import { PromptInput } from "./PromptInput";
+import { Loader2 } from "lucide-react";
 
 interface VideoProcessorProps {
   isProcessing: boolean;
@@ -40,21 +40,31 @@ export const VideoProcessor = ({
 
   return (
     <div className="space-y-4">
-      <VideoAnalysis 
-        file={file}
-        isAnalyzing={isAnalyzing}
-        onAnalyze={onAnalyze}
-      />
+      {file && (
+        <Button
+          type="button"
+          onClick={onAnalyze}
+          disabled={isAnalyzing}
+          className="w-full"
+          variant="secondary"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing Video...
+            </>
+          ) : (
+            "Analyze Video"
+          )}
+        </Button>
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="prompt">Prompt (optional)</Label>
-        <Textarea
-          id="prompt"
-          placeholder="Describe the sound effect you want to generate..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-      </div>
+      <PromptInput
+        prompt={prompt}
+        setPrompt={setPrompt}
+        disabled={isProcessing}
+        placeholder="Describe the sound effect you want to generate (optional)"
+      />
 
       <AdvancedSettings
         settings={advancedSettings}
