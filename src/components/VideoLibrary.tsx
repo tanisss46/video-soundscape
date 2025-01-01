@@ -41,7 +41,7 @@ export const VideoLibrary = () => {
           title,
           video_url,
           created_at,
-          user_generations (
+          user_generations!video_id (
             audio_url
           )
         `)
@@ -50,9 +50,9 @@ export const VideoLibrary = () => {
       if (error) throw error;
 
       // Transform the data to include the audio_url from the latest generation
-      const transformedData = (data as VideoWithGenerations[]).map(video => ({
+      const transformedData = data.map(video => ({
         ...video,
-        audio_url: video.user_generations?.[0]?.audio_url || null
+        audio_url: video.user_generations?.[0]?.audio_url || undefined
       }));
 
       return transformedData as Video[];

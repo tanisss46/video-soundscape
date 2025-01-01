@@ -39,6 +39,7 @@ export type Database = {
           prompt: string
           status: string | null
           user_id: string | null
+          video_id: string | null
           video_url: string | null
         }
         Insert: {
@@ -49,6 +50,7 @@ export type Database = {
           prompt: string
           status?: string | null
           user_id?: string | null
+          video_id?: string | null
           video_url?: string | null
         }
         Update: {
@@ -59,9 +61,18 @@ export type Database = {
           prompt?: string
           status?: string | null
           user_id?: string | null
+          video_id?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_generations_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       videos: {
         Row: {
