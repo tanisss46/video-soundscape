@@ -65,9 +65,15 @@ export const VideoProcessor = ({
         disabled={disabled || isUploading || isProcessing}
       >
         {isUploading ? (
-          "Uploading..."
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Uploading...
+          </>
         ) : isProcessing ? (
-          "Processing..."
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing...
+          </>
         ) : (
           "Generate Sound Effect"
         )}
