@@ -17,6 +17,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [prompt, setPrompt] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,6 +61,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
       if (error) throw error;
 
       if (data.output) {
+        setPrompt(data.output);
         toast({
           title: "Success",
           description: "Video analysis completed",
@@ -212,7 +214,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
           throw new Error("Failed to generate sound effect");
         }
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error processing video:", error);
       toast({
         title: "Error",

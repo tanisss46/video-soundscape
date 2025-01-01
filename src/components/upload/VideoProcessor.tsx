@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
 import { PromptInput } from "./PromptInput";
-import { VideoAnalysis } from "./VideoAnalysis";
+import { ProcessingStatus } from "./ProcessingStatus";
 import { Loader2, Scan } from "lucide-react";
 
 interface VideoProcessorProps {
@@ -12,7 +12,7 @@ interface VideoProcessorProps {
   onProcess: (prompt: string, settings: AdvancedSettingsValues) => Promise<void>;
   disabled: boolean;
   file: File | null;
-  onAnalyze: () => void;
+  onAnalyze: () => Promise<void>;
   isAnalyzing: boolean;
 }
 
@@ -34,7 +34,10 @@ export const VideoProcessor = ({
     negativePrompt: "",
   });
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
+    if (file) {
+      await onAnalyze();
+    }
     onProcess(prompt, advancedSettings);
   };
 
@@ -43,7 +46,7 @@ export const VideoProcessor = ({
       <PromptInput
         prompt={prompt}
         setPrompt={setPrompt}
-        disabled={isProcessing}
+        disabled={isProcessing || isAnalyzing}
         placeholder="Describe the sound effect you want to generate (optional)"
       />
 
@@ -52,11 +55,24 @@ export const VideoProcessor = ({
         onSettingsChange={setAdvancedSettings}
       />
 
+      {(isUploading || isProcessing || isAnalyzing) && (
+        <ProcessingStatus 
+          status={
+            isAnalyzing 
+              ? "Analyzing video content..." 
+              : isUploading 
+                ? "Uploading video..." 
+                : "Processing video..."
+          } 
+          isUploading={isUploading || isAnalyzing}
+        />
+      )}
+
       <Button
         className="w-full"
         size="lg"
         onClick={handleProcess}
-        disabled={disabled || isUploading || isProcessing}
+        disabled={disabled || isUploading || isProcessing || isAnalyzing}
       >
         {isUploading ? (
           <>
@@ -68,32 +84,15 @@ export const VideoProcessor = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
           </>
+        ) : isAnalyzing ? (
+          <>
+            <Scan className="mr-2 h-4 w-4" />
+            Analyzing...
+          </>
         ) : (
           "Generate Sound Effect"
         )}
       </Button>
-
-      {file && (
-        <Button
-          type="button"
-          onClick={onAnalyze}
-          disabled={isAnalyzing}
-          className="w-full"
-          variant="secondary"
-        >
-          {isAnalyzing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Video...
-            </>
-          ) : (
-            <>
-              <Scan className="mr-2 h-4 w-4" />
-              Analyze Video
-            </>
-          )}
-        </Button>
-      )}
     </div>
   );
 };
