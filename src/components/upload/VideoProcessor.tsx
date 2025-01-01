@@ -4,7 +4,7 @@ import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
 import { PromptInput } from "./PromptInput";
 import { VideoAnalysis } from "./VideoAnalysis";
-import { Loader2 } from "lucide-react";
+import { Loader2, Scan } from "lucide-react";
 
 interface VideoProcessorProps {
   isProcessing: boolean;
@@ -52,12 +52,6 @@ export const VideoProcessor = ({
         onSettingsChange={setAdvancedSettings}
       />
 
-      <VideoAnalysis
-        file={file}
-        isAnalyzing={isAnalyzing}
-        onAnalyze={onAnalyze}
-      />
-
       <Button
         className="w-full"
         size="lg"
@@ -78,6 +72,28 @@ export const VideoProcessor = ({
           "Generate Sound Effect"
         )}
       </Button>
+
+      {file && (
+        <Button
+          type="button"
+          onClick={onAnalyze}
+          disabled={isAnalyzing}
+          className="w-full"
+          variant="secondary"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing Video...
+            </>
+          ) : (
+            <>
+              <Scan className="mr-2 h-4 w-4" />
+              Analyze Video
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };
