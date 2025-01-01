@@ -1,4 +1,5 @@
 import { Home, Video, FolderOpen, Settings, Compass } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -52,10 +53,10 @@ export function AppSidebar() {
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center gap-2 px-2 py-1.5 text-sm">
+                      <Link to={item.url} className="flex items-center gap-2 px-2 py-1.5 text-sm">
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
