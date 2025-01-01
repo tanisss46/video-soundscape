@@ -17,7 +17,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [prompt, setPrompt] = useState("");
+  const [analysisResult, setAnalysisResult] = useState<string>("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -30,7 +30,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const resetUpload = () => {
     setSelectedFile(null);
     setVideoUrl(null);
-    setPrompt("");
+    setAnalysisResult("");
   };
 
   const handleAnalyze = async () => {
@@ -69,7 +69,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
       if (error) throw error;
 
       if (data.output) {
-        setPrompt(data.output);
+        setAnalysisResult(data.output);
         toast({
           title: "Success",
           description: "Video analysis completed",
@@ -250,6 +250,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
         file={selectedFile}
         onAnalyze={handleAnalyze}
         isAnalyzing={isAnalyzing}
+        analysisResult={analysisResult}
       />
     </div>
   );

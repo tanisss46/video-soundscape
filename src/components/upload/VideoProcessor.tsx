@@ -14,6 +14,7 @@ interface VideoProcessorProps {
   file: File | null;
   onAnalyze: () => Promise<void>;
   isAnalyzing: boolean;
+  analysisResult?: string;
 }
 
 export const VideoProcessor = ({
@@ -24,6 +25,7 @@ export const VideoProcessor = ({
   file,
   onAnalyze,
   isAnalyzing,
+  analysisResult,
 }: VideoProcessorProps) => {
   const [prompt, setPrompt] = useState("");
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettingsValues>({
@@ -33,6 +35,13 @@ export const VideoProcessor = ({
     cfgStrength: 4.5,
     negativePrompt: "",
   });
+
+  // Update prompt when analysis result changes
+  React.useEffect(() => {
+    if (analysisResult) {
+      setPrompt(analysisResult);
+    }
+  }, [analysisResult]);
 
   const handleProcess = async () => {
     if (file && !prompt) {
