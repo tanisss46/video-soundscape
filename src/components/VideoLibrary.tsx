@@ -162,7 +162,7 @@ export const VideoLibrary = () => {
       
       <TabsContent value="favorites">
         <VideoGrid
-          videos={videos?.filter(v => false)} {/* TODO: Add favorites functionality */}
+          videos={videos?.filter(() => false)} // TODO: Add favorites functionality
           currentlyPlayingId={currentlyPlayingId}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
