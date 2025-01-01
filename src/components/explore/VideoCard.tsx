@@ -13,17 +13,13 @@ interface VideoCardProps {
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
   const handleMouseEnter = () => {
     setIsHovered(true);
     if (audioUrl) {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(audioUrl);
-      }
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => {
+      const audio = new Audio(audioUrl);
+      audio.play().catch(error => {
         console.error("Audio playback error:", error);
       });
     }
@@ -36,10 +32,6 @@ export const VideoCard = ({ video }: VideoCardProps) => {
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;

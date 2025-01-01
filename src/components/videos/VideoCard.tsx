@@ -23,16 +23,12 @@ export const VideoCard = ({
 }: VideoCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (video.audio_url && !audioRef.current) {
-      audioRef.current = new Audio(video.audio_url);
-    }
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => {
+    if (video.audio_url) {
+      const audio = new Audio(video.audio_url);
+      audio.play().catch(error => {
         console.error("Audio playback error:", error);
       });
     }
@@ -46,10 +42,6 @@ export const VideoCard = ({
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
