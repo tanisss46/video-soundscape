@@ -23,7 +23,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+        audioRef.current = null;
       }
     };
   }, []);
@@ -31,15 +31,21 @@ export const VideoCard = ({ video }: VideoCardProps) => {
   const handleMouseEnter = () => {
     setIsHovered(true);
     if (audioUrl && isSoundEnabled) {
-      if (!audioRef.current) {
+      // Create new Audio instance only if we have a valid URL
+      if (!audioRef.current && audioUrl) {
         audioRef.current = new Audio(audioUrl);
         audioRef.current.volume = 1;
       }
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Audio playback error:", error);
-        });
+      
+      if (audioRef.current) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Audio playback error:", error);
+            // Reset audio ref if there's an error
+            audioRef.current = null;
+          });
+        }
       }
     }
     if (videoRef.current) {
@@ -62,16 +68,19 @@ export const VideoCard = ({ video }: VideoCardProps) => {
   const toggleSound = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsSoundEnabled(!isSoundEnabled);
-    if (!isSoundEnabled && isHovered && audioRef.current && audioUrl) {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Audio playback error:", error);
-        });
+    if (audioRef.current) {
+      if (!isSoundEnabled && isHovered) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Audio playback error:", error);
+            audioRef.current = null;
+          });
+        }
+      } else {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
       }
-    } else if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
     }
   };
 
@@ -90,7 +99,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
           muted
           playsInline
         />
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="flex items-center justify-between">
             <button 
               className="text-white/80 hover:text-white transition-colors"
