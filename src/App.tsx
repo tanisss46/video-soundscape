@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import AuthPage from "./pages/Auth";
 import Explore from "./pages/Explore";
+import { AppSidebar } from "./components/AppSidebar";
+import { Navbar } from "./components/Navbar";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -41,13 +43,35 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/auth" replace />;
 };
 
+const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="flex h-screen bg-[#0f111a]">
+      <AppSidebar />
+      <main className="flex-1 overflow-auto pt-16">
+        <Navbar />
+        {children}
+      </main>
+    </div>
+  );
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={<Navigate to="/explore" replace />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-      <Route path="/explore" element={<Explore />} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <Index />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/explore" element={
+        <AppLayout>
+          <Explore />
+        </AppLayout>
+      } />
     </Routes>
   );
 };
