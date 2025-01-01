@@ -62,27 +62,44 @@ export const VideoLibrary = () => {
     setCurrentlyPlayingId(null);
   };
 
-  const handleDownload = async (videoUrl: string) => {
+  const handleDownload = async (videoUrl: string, audioUrl?: string) => {
     try {
-      const response = await fetch(videoUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'video.mp4';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Download video
+      const videoResponse = await fetch(videoUrl);
+      const videoBlob = await videoResponse.blob();
+      const videoDownloadUrl = window.URL.createObjectURL(videoBlob);
+      const videoLink = document.createElement('a');
+      videoLink.href = videoDownloadUrl;
+      videoLink.download = 'video.mp4';
+      document.body.appendChild(videoLink);
+      videoLink.click();
+      window.URL.revokeObjectURL(videoDownloadUrl);
+      document.body.removeChild(videoLink);
+
+      // Download audio if available
+      if (audioUrl) {
+        const audioResponse = await fetch(audioUrl);
+        const audioBlob = await audioResponse.blob();
+        const audioDownloadUrl = window.URL.createObjectURL(audioBlob);
+        const audioLink = document.createElement('a');
+        audioLink.href = audioDownloadUrl;
+        audioLink.download = 'audio.mp3';
+        document.body.appendChild(audioLink);
+        audioLink.click();
+        window.URL.revokeObjectURL(audioDownloadUrl);
+        document.body.removeChild(audioLink);
+      }
       
       toast({
         title: "Success",
-        description: "Video download started",
+        description: audioUrl 
+          ? "Video and audio download started" 
+          : "Video download started",
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to download video",
+        description: "Failed to download files",
         variant: "destructive",
       });
     }

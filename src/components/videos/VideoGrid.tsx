@@ -1,13 +1,13 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Video } from "@/types/video";
-import { VideoCard } from "./VideoCard"; // Add this import
+import { VideoCard } from "./VideoCard";
 
 interface VideoGridProps {
   videos: Video[] | null;
   onMouseEnter: (videoId: string, audioUrl?: string) => void;
   onMouseLeave: (videoId: string) => void;
   currentlyPlayingId: string | null;
-  onDownload: (videoUrl: string) => void;
+  onDownload: (videoUrl: string, audioUrl?: string) => void;
   onDelete: (videoId: string) => void;
 }
 
@@ -36,7 +36,7 @@ export const VideoGrid = ({
           isPlaying={currentlyPlayingId === video.id}
           onMouseEnter={() => onMouseEnter(video.id, video.audio_url)}
           onMouseLeave={() => onMouseLeave(video.id)}
-          onDownload={() => onDownload(video.video_url)}
+          onDownload={() => onDownload(video.video_url, video.audio_url)}
           onDelete={() => onDelete(video.id)}
         />
       ))}
