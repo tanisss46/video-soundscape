@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Film, Heart, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,24 +10,67 @@ type Video = {
   id: string;
   title: string;
   video_url: string;
+  audio_url?: string;
   created_at: string;
 };
 
 export const VideoLibrary = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
   const { data: videos, isLoading, error } = useQuery({
     queryKey: ['videos'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('videos')
-        .select('*')
+        .select(`
+          id,
+          title,
+          video_url,
+          created_at,
+          user_generations (
+            audio_url
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Video[];
+
+      // Transform the data to include the audio_url from the latest generation
+      const transformedData = data.map(video => ({
+        ...video,
+        audio_url: video.user_generations?.[0]?.audio_url || null
+      }));
+
+      return transformedData as Video[];
     }
   });
+
+  const handleMouseEnter = (videoId: string, audioUrl?: string) => {
+    if (!audioUrl) return;
+    
+    // Stop any currently playing audio
+    if (currentlyPlayingId && audioRefs.current[currentlyPlayingId]) {
+      audioRefs.current[currentlyPlayingId].pause();
+      audioRefs.current[currentlyPlayingId].currentTime = 0;
+    }
+
+    // Play the new audio
+    if (!audioRefs.current[videoId]) {
+      audioRefs.current[videoId] = new Audio(audioUrl);
+    }
+    audioRefs.current[videoId].play();
+    setCurrentlyPlayingId(videoId);
+  };
+
+  const handleMouseLeave = (videoId: string) => {
+    if (audioRefs.current[videoId]) {
+      audioRefs.current[videoId].pause();
+      audioRefs.current[videoId].currentTime = 0;
+      setCurrentlyPlayingId(null);
+    }
+  };
 
   const renderVideoGrid = (videos: Video[] | null) => {
     if (!videos?.length) {
@@ -41,7 +84,12 @@ export const VideoLibrary = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {videos.map((video) => (
-          <Card key={video.id} className="overflow-hidden">
+          <Card 
+            key={video.id} 
+            className="overflow-hidden transition-transform hover:scale-[1.02]"
+            onMouseEnter={() => handleMouseEnter(video.id, video.audio_url)}
+            onMouseLeave={() => handleMouseLeave(video.id)}
+          >
             <CardContent className="p-0">
               <video 
                 src={video.video_url} 
@@ -52,6 +100,11 @@ export const VideoLibrary = () => {
                 <p className="text-sm font-medium">
                   {new Date(video.created_at).toLocaleDateString()}
                 </p>
+                {currentlyPlayingId === video.id && video.audio_url && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ♪ Playing sound effects...
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
