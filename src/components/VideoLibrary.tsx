@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Film, Heart, Upload } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
@@ -11,17 +11,15 @@ import { Video } from "@/types/video";
 export const VideoLibrary = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
-  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const { toast } = useToast();
 
-  // Updated query to properly fetch videos with their generations
   const { data: videos, isLoading, error } = useQuery({
     queryKey: ['videos'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
       
-      console.log("Fetching videos for user:", user.id); // Debug log
+      console.log("Fetching videos for user:", user.id);
 
       const { data, error } = await supabase
         .from('videos')
@@ -38,42 +36,27 @@ export const VideoLibrary = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Error fetching videos:", error); // Debug log
+        console.error("Error fetching videos:", error);
         throw error;
       }
 
-      console.log("Fetched videos:", data); // Debug log
+      console.log("Fetched videos:", data);
 
-      // Transform the data to match the Video type
       return data.map(video => ({
         ...video,
         audio_url: video.user_generations?.[0]?.audio_url
       })) as Video[];
     },
-    refetchOnMount: true, // Add this to ensure fresh data when component mounts
+    refetchOnMount: true,
   });
 
   const handleMouseEnter = (videoId: string, audioUrl?: string) => {
     if (!audioUrl) return;
-    
-    if (currentlyPlayingId && audioRefs.current[currentlyPlayingId]) {
-      audioRefs.current[currentlyPlayingId].pause();
-      audioRefs.current[currentlyPlayingId].currentTime = 0;
-    }
-
-    if (!audioRefs.current[videoId]) {
-      audioRefs.current[videoId] = new Audio(audioUrl);
-    }
-    audioRefs.current[videoId].play();
     setCurrentlyPlayingId(videoId);
   };
 
-  const handleMouseLeave = (videoId: string) => {
-    if (audioRefs.current[videoId]) {
-      audioRefs.current[videoId].pause();
-      audioRefs.current[videoId].currentTime = 0;
-      setCurrentlyPlayingId(null);
-    }
+  const handleMouseLeave = () => {
+    setCurrentlyPlayingId(null);
   };
 
   const handleDownload = async (videoUrl: string) => {
@@ -172,7 +155,7 @@ export const VideoLibrary = () => {
       
       <TabsContent value="favorites">
         <VideoGrid
-          videos={videos?.filter(() => false)} // TODO: Add favorites functionality
+          videos={videos?.filter(() => false)}
           currentlyPlayingId={currentlyPlayingId}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
