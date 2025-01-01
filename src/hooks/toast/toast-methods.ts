@@ -1,7 +1,7 @@
 import { Toast, actionTypes } from "./types";
 import { dispatch, genId } from "./state";
 
-export function toast({ ...props }: Toast) {
+const createToast = ({ ...props }: Toast) => {
   const id = genId();
 
   const update = (props: Toast) =>
@@ -29,22 +29,21 @@ export function toast({ ...props }: Toast) {
     dismiss,
     update,
   };
-}
-
-toast.success = (description: string, props?: Omit<Toast, "description">) => {
-  return toast({
-    variant: "success",
-    description,
-    ...props,
-  });
 };
 
-toast.error = (description: string, props?: Omit<Toast, "description">) => {
-  return toast({
-    variant: "error",
-    description,
-    ...props,
-  });
-};
-
-export { toast };
+export const toast = Object.assign(createToast, {
+  success: (description: string, props?: Omit<Toast, "description">) => {
+    return createToast({
+      variant: "success",
+      description,
+      ...props,
+    });
+  },
+  error: (description: string, props?: Omit<Toast, "description">) => {
+    return createToast({
+      variant: "error",
+      description,
+      ...props,
+    });
+  }
+});

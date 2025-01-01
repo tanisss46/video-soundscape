@@ -81,7 +81,7 @@ export const genId = () => {
   return count.toString();
 };
 
-const listeners: Array<(state: State) => void> = [];
+export const listeners: Array<(state: State) => void> = [];
 export let memoryState: State = { toasts: [] };
 
 export function dispatch(action: Action) {
@@ -90,5 +90,3 @@ export function dispatch(action: Action) {
     listener(memoryState);
   });
 }
-
-export { listeners };

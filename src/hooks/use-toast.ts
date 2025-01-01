@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { State } from "./toast/types";
-import { memoryState, listeners } from "./toast/state";
+import { memoryState, listeners, dispatch } from "./toast/state";
 import { toast } from "./toast/toast-methods";
 
 function useToast() {
