@@ -8,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, X } from "lucide-react";
+import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
-import { AdvancedSettings } from "./AdvancedSettings";
 
 interface VideoUploadProps {
   onBeforeProcess?: () => Promise<boolean>;
@@ -263,8 +263,8 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
         </div>
 
         <AdvancedSettings
-          values={advancedSettings}
-          onChange={setAdvancedSettings}
+          settings={advancedSettings}
+          onSettingsChange={setAdvancedSettings}
         />
 
         <Button
