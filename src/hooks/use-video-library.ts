@@ -46,37 +46,50 @@ export const useVideoLibrary = () => {
     staleTime: 0,
   });
 
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      return true;
+    } catch (error) {
+      console.error(`Error downloading ${filename}:`, error);
+      return false;
+    }
+  };
+
   const handleDownload = async (videoUrl: string, audioUrl?: string) => {
     try {
-      // Download video
-      const videoResponse = await fetch(videoUrl);
-      if (!videoResponse.ok) throw new Error('Failed to fetch video');
-      const videoBlob = await videoResponse.blob();
-      const videoDownloadUrl = window.URL.createObjectURL(videoBlob);
-      const videoLink = document.createElement('a');
-      videoLink.href = videoDownloadUrl;
-      videoLink.download = 'video.mp4';
-      videoLink.click();
-      window.URL.revokeObjectURL(videoDownloadUrl);
-
-      // Download audio if available
-      if (audioUrl) {
-        const audioResponse = await fetch(audioUrl);
-        if (!audioResponse.ok) throw new Error('Failed to fetch audio');
-        const audioBlob = await audioResponse.blob();
-        const audioDownloadUrl = window.URL.createObjectURL(audioBlob);
-        const audioLink = document.createElement('a');
-        audioLink.href = audioDownloadUrl;
-        audioLink.download = 'audio.mp3';
-        audioLink.click();
-        window.URL.revokeObjectURL(audioDownloadUrl);
-      }
+      const timestamp = new Date().getTime();
+      const videoSuccess = await downloadFile(videoUrl, `video_${timestamp}.mp4`);
+      let audioSuccess = false;
       
+      if (audioUrl) {
+        audioSuccess = await downloadFile(audioUrl, `audio_${timestamp}.mp3`);
+      }
+
+      if (!videoSuccess) {
+        throw new Error('Failed to download video');
+      }
+
       toast({
         title: "Success",
         description: audioUrl 
-          ? "Video and audio download started" 
-          : "Video download started",
+          ? audioSuccess 
+            ? "Video and audio downloaded successfully"
+            : "Video downloaded, but audio download failed"
+          : "Video downloaded successfully",
       });
     } catch (error) {
       console.error('Download error:', error);
