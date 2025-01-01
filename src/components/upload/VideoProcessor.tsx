@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
 import { PromptInput } from "./PromptInput";
 import { ProcessingStatus } from "./ProcessingStatus";
-import { Loader2, Scan } from "lucide-react";
+import { VideoAnalysisButton } from "./VideoAnalysisButton";
+import { GenerateButton } from "./GenerateButton";
 
 interface VideoProcessorProps {
   isProcessing: boolean;
@@ -57,25 +57,13 @@ export const VideoProcessor = ({
         />
       )}
 
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={onAnalyze}
-        disabled={disabled || isUploading || isProcessing || isAnalyzing}
-        variant="secondary"
-      >
-        {isAnalyzing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Analyzing Video...
-          </>
-        ) : (
-          <>
-            <Scan className="mr-2 h-4 w-4" />
-            Analyze Video
-          </>
-        )}
-      </Button>
+      <VideoAnalysisButton
+        onAnalyze={onAnalyze}
+        isAnalyzing={isAnalyzing}
+        disabled={disabled}
+        isUploading={isUploading}
+        isProcessing={isProcessing}
+      />
 
       <PromptInput
         prompt={prompt}
@@ -89,26 +77,13 @@ export const VideoProcessor = ({
         onSettingsChange={setAdvancedSettings}
       />
 
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={() => onProcess(prompt, advancedSettings)}
-        disabled={disabled || isUploading || isProcessing || isAnalyzing}
-      >
-        {isUploading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
-          </>
-        ) : isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          "Generate Sound Effect"
-        )}
-      </Button>
+      <GenerateButton
+        onGenerate={() => onProcess(prompt, advancedSettings)}
+        isUploading={isUploading}
+        isProcessing={isProcessing}
+        isAnalyzing={isAnalyzing}
+        disabled={disabled}
+      />
     </div>
   );
 };
