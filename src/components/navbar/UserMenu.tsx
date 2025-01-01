@@ -16,9 +16,7 @@ import {
   Video, 
   CreditCard, 
   Coins, 
-  Moon, 
   LogOut,
-  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -78,28 +76,22 @@ export const UserMenu = () => {
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <HelpCircle className="mr-2 h-4 w-4" />
-          <span>Help</span>
+          <Coins className="mr-2 h-4 w-4" />
+          <span>Credits</span>
+          <span className="ml-auto text-xs text-muted-foreground">875 left</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Video className="mr-2 h-4 w-4" />
-          <span>Video tutorials</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem>
           <CreditCard className="mr-2 h-4 w-4" />
           <span>My plan</span>
           <span className="ml-auto text-xs text-muted-foreground">Plus</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Coins className="mr-2 h-4 w-4" />
-          <span>Credits</span>
-          <span className="ml-auto text-xs text-muted-foreground">875 left</span>
+          <Video className="mr-2 h-4 w-4" />
+          <span>Video tutorials</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Moon className="mr-2 h-4 w-4" />
-          <span>Relaxed mode</span>
-          <Info className="ml-auto h-4 w-4 text-muted-foreground" />
+          <HelpCircle className="mr-2 h-4 w-4" />
+          <span>Help</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>

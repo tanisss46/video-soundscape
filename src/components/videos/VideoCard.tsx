@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface VideoCardProps {
   video: Video;
@@ -84,6 +84,7 @@ export const VideoCard = ({
   const confirmDelete = () => {
     onDelete();
     setShowDeleteDialog(false);
+    toast.success("Video deleted successfully");
   };
 
   return (
@@ -102,13 +103,6 @@ export const VideoCard = ({
             muted
             playsInline
           />
-          {video.audio_url && (
-            <div className="absolute top-2 left-2">
-              <Badge className="bg-purple-600 text-white hover:bg-purple-700">
-                AI Sound
-              </Badge>
-            </div>
-          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -131,14 +125,6 @@ export const VideoCard = ({
               </Button>
             </div>
           </div>
-
-          {isPlaying && video.audio_url && (
-            <div className="absolute top-2 right-2">
-              <span className="text-xs bg-black/60 text-white px-2 py-1 rounded-full animate-pulse">
-                ♪ Playing sound effects...
-              </span>
-            </div>
-          )}
         </CardContent>
       </Card>
 
