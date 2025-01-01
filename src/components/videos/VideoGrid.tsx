@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Video } from "@/types/video";
+import { VideoCard } from "./VideoCard"; // Add this import
 
 interface VideoGridProps {
   videos: Video[] | null;
