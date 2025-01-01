@@ -12,14 +12,14 @@ import {
 
 const menuItems = [
   {
-    title: "Home",
-    icon: Home,
-    url: "/",
-  },
-  {
     title: "Explore",
     icon: Compass,
     url: "/explore",
+  },
+  {
+    title: "Dashboard",
+    icon: Home,
+    url: "/dashboard",
   },
   {
     title: "AI Videos",
