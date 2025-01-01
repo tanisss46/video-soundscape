@@ -16,6 +16,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -28,6 +29,52 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const resetUpload = () => {
     setSelectedFile(null);
     setVideoUrl(null);
+  };
+
+  const handleAnalyze = async () => {
+    if (!selectedFile) return;
+
+    setIsAnalyzing(true);
+    try {
+      const timestamp = Date.now();
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `temp_${timestamp}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+
+      const { data, error } = await supabase.functions.invoke('analyze-video', {
+        body: { videoUrl: publicUrl }
+      });
+
+      if (error) throw error;
+
+      if (data.output) {
+        toast({
+          title: "Success",
+          description: "Video analysis completed",
+        });
+      }
+    } catch (error: any) {
+      console.error("Analysis error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const uploadVideo = async () => {
@@ -104,14 +151,21 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
 
       if (generationError) throw generationError;
 
+      // Only include negativePrompt in the API call if it's not empty
+      const apiParams = {
+        video_url: videoUrl,
+        prompt: prompt,
+        seed: advancedSettings.seed,
+        duration: advancedSettings.duration,
+        num_steps: advancedSettings.numSteps,
+        cfg_strength: advancedSettings.cfgStrength,
+        ...(advancedSettings.negativePrompt && { negative_prompt: advancedSettings.negativePrompt })
+      };
+
       const { data: prediction, error: predictionError } = await supabase.functions.invoke("mmaudio", {
         body: {
           action: "create_prediction",
-          params: {
-            video_url: videoUrl,
-            prompt: prompt,
-            ...advancedSettings,
-          },
+          params: apiParams,
         },
       });
 
@@ -178,6 +232,9 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
         isUploading={isUploading}
         onProcess={handleProcess}
         disabled={!selectedFile}
+        file={selectedFile}
+        onAnalyze={handleAnalyze}
+        isAnalyzing={isAnalyzing}
       />
     </div>
   );

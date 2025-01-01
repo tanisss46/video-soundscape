@@ -23,6 +23,17 @@ serve(async (req) => {
     let response;
     switch (action) {
       case 'create_prediction':
+        // Create the input object with only defined parameters
+        const input = {
+          video: params.video_url,
+          prompt: params.prompt || "default sound",
+          seed: params.seed ?? 0,
+          duration: params.duration || 8,
+          num_steps: params.num_steps || 25,
+          cfg_strength: params.cfg_strength || 4.5,
+          ...(params.negative_prompt && { negative_prompt: params.negative_prompt })
+        };
+
         response = await fetch('https://api.replicate.com/v1/predictions', {
           method: 'POST',
           headers: {
@@ -31,15 +42,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
-            input: {
-              video: params.video_url,
-              prompt: params.prompt || "default sound",
-              seed: -1,
-              duration: params.duration || 8,
-              num_steps: params.num_steps || 25,
-              cfg_strength: params.cfg_strength || 4.5,
-              negative_prompt: "music"
-            }
+            input
           }),
         });
         break;
