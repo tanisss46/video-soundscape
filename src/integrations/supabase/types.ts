@@ -79,7 +79,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
-          title: string
+          title: string | null
           updated_at: string
           user_id: string
           video_url: string
@@ -88,7 +88,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
-          title: string
+          title?: string | null
           updated_at?: string
           user_id: string
           video_url: string
@@ -97,7 +97,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
-          title?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
           video_url?: string

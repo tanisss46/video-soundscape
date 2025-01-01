@@ -116,6 +116,21 @@ export const useVideoUpload = () => {
         .from('videos')
         .getPublicUrl(fileName);
 
+      // First, create the video record
+      const { data: videoData, error: videoError } = await supabase
+        .from('videos')
+        .insert([
+          {
+            user_id: session.user.id,
+            video_url: publicUrl,
+            title: file.name.split('.')[0], // Use filename as title
+          }
+        ])
+        .select()
+        .single();
+
+      if (videoError) throw videoError;
+
       const { data: generationData, error: generationError } = await supabase
         .from('user_generations')
         .insert([
@@ -124,6 +139,7 @@ export const useVideoUpload = () => {
             video_url: publicUrl,
             status: 'processing',
             user_id: session.user.id,
+            video_id: videoData.id, // Link to the video record
             duration: settings.duration,
           }
         ])
