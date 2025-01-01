@@ -30,10 +30,18 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const resetUpload = () => {
     setSelectedFile(null);
     setVideoUrl(null);
+    setPrompt("");
   };
 
   const handleAnalyze = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      toast({
+        title: "Error",
+        description: "Please upload a video first",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsAnalyzing(true);
     try {
@@ -214,6 +222,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
           throw new Error("Failed to generate sound effect");
         }
       }, 1000);
+
     } catch (error: any) {
       console.error("Error processing video:", error);
       toast({

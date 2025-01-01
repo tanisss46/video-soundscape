@@ -35,25 +35,30 @@ export const VideoProcessor = ({
   });
 
   const handleProcess = async () => {
-    if (file) {
-      await onAnalyze();
-    }
     onProcess(prompt, advancedSettings);
   };
 
   return (
     <div className="space-y-4">
-      <PromptInput
-        prompt={prompt}
-        setPrompt={setPrompt}
-        disabled={isProcessing || isAnalyzing}
-        placeholder="Describe the sound effect you want to generate (optional)"
-      />
-
-      <AdvancedSettings
-        settings={advancedSettings}
-        onSettingsChange={setAdvancedSettings}
-      />
+      <Button
+        type="button"
+        onClick={onAnalyze}
+        disabled={isAnalyzing || !file}
+        className="w-full"
+        variant="secondary"
+      >
+        {isAnalyzing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Analyzing Video...
+          </>
+        ) : (
+          <>
+            <Scan className="mr-2 h-4 w-4" />
+            Analyze Video Content
+          </>
+        )}
+      </Button>
 
       {(isUploading || isProcessing || isAnalyzing) && (
         <ProcessingStatus 
@@ -67,6 +72,18 @@ export const VideoProcessor = ({
           isUploading={isUploading || isAnalyzing}
         />
       )}
+
+      <PromptInput
+        prompt={prompt}
+        setPrompt={setPrompt}
+        disabled={isProcessing || isAnalyzing}
+        placeholder="Describe the sound effect you want to generate (optional)"
+      />
+
+      <AdvancedSettings
+        settings={advancedSettings}
+        onSettingsChange={setAdvancedSettings}
+      />
 
       <Button
         className="w-full"
@@ -83,11 +100,6 @@ export const VideoProcessor = ({
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
-          </>
-        ) : isAnalyzing ? (
-          <>
-            <Scan className="mr-2 h-4 w-4" />
-            Analyzing...
           </>
         ) : (
           "Generate Sound Effect"
