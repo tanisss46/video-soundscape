@@ -80,7 +80,10 @@ export const VideoCard = ({
               variant="ghost"
               size="icon"
               className="text-white/80 hover:text-white hover:bg-white/20"
-              onClick={onDownload}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDownload();
+              }}
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -88,7 +91,10 @@ export const VideoCard = ({
               variant="ghost"
               size="icon"
               className="text-white/80 hover:text-white hover:bg-white/20"
-              onClick={onDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

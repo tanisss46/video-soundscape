@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Film, Heart, Upload } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ export const VideoLibrary = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: videos, isLoading, error } = useQuery({
     queryKey: ['videos'],
@@ -48,6 +49,8 @@ export const VideoLibrary = () => {
       })) as Video[];
     },
     refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const handleMouseEnter = (videoId: string, audioUrl?: string) => {
@@ -93,6 +96,9 @@ export const VideoLibrary = () => {
         .eq('id', videoId);
 
       if (error) throw error;
+
+      // Invalidate and refetch the videos query
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
 
       toast({
         title: "Success",

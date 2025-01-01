@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload, X } from "lucide-react";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface VideoUploadProps {
   onBeforeProcess?: () => Promise<boolean>;
@@ -32,6 +33,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   });
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -174,6 +176,9 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
               status: "completed",
             })
             .eq("id", generation.id);
+
+          // Invalidate and refetch the videos query
+          queryClient.invalidateQueries({ queryKey: ['videos'] });
 
           toast({
             title: "Success",
