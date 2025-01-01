@@ -8,6 +8,8 @@ export default function CreateSoundEffect() {
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function CreateSoundEffect() {
     }
     setCurrentStep(3);
     setCompletedSteps([1, 2]);
+    setIsProcessing(true);
     return true;
   };
 
@@ -52,7 +55,6 @@ export default function CreateSoundEffect() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Deduct one credit
     const { data, error } = await supabase
       .from('profiles')
       .update({ credits: userCredits! - 1 })
@@ -68,6 +70,7 @@ export default function CreateSoundEffect() {
     setUserCredits(data.credits);
     setCurrentStep(4);
     setCompletedSteps([1, 2, 3]);
+    setIsProcessing(false);
     
     toast({
       title: "Success!",
@@ -82,6 +85,16 @@ export default function CreateSoundEffect() {
     setCompletedSteps([1]);
   };
 
+  const handleAnalyzeStart = () => {
+    setIsAnalyzing(true);
+  };
+
+  const handleAnalyzeComplete = () => {
+    setIsAnalyzing(false);
+    setCompletedSteps([1, 2]);
+    setCurrentStep(3);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -94,12 +107,16 @@ export default function CreateSoundEffect() {
       <StepIndicator 
         currentStep={currentStep}
         completedSteps={completedSteps}
+        isAnalyzing={isAnalyzing}
+        isProcessing={isProcessing}
       />
 
       <VideoUpload 
         onBeforeProcess={handleBeforeProcess}
         onAfterProcess={handleAfterProcess}
         onFileSelect={handleFileSelect}
+        onAnalyzeStart={handleAnalyzeStart}
+        onAnalyzeComplete={handleAnalyzeComplete}
       />
     </div>
   );

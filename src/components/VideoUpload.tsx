@@ -10,12 +10,16 @@ interface VideoUploadProps {
   onBeforeProcess?: () => Promise<boolean>;
   onAfterProcess?: () => Promise<void>;
   onFileSelect?: () => void;
+  onAnalyzeStart?: () => void;
+  onAnalyzeComplete?: () => void;
 }
 
 export const VideoUpload = ({ 
   onBeforeProcess, 
   onAfterProcess,
-  onFileSelect 
+  onFileSelect,
+  onAnalyzeStart,
+  onAnalyzeComplete
 }: VideoUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -51,6 +55,10 @@ export const VideoUpload = ({
       return;
     }
 
+    if (onAnalyzeStart) {
+      onAnalyzeStart();
+    }
+
     setIsAnalyzing(true);
     try {
       const timestamp = Date.now();
@@ -82,6 +90,9 @@ export const VideoUpload = ({
           title: "Success",
           description: "Video analysis completed",
         });
+        if (onAnalyzeComplete) {
+          onAnalyzeComplete();
+        }
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
