@@ -57,6 +57,18 @@ export const VideoCard = ({
     onMouseLeave();
   };
 
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDownload();
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete();
+  };
+
   return (
     <Card 
       className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50"
@@ -80,10 +92,7 @@ export const VideoCard = ({
               variant="ghost"
               size="icon"
               className="text-white/80 hover:text-white hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownload();
-              }}
+              onClick={handleDownloadClick}
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -91,10 +100,7 @@ export const VideoCard = ({
               variant="ghost"
               size="icon"
               className="text-white/80 hover:text-white hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
+              onClick={handleDeleteClick}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
