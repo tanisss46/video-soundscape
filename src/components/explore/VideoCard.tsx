@@ -12,14 +12,15 @@ interface VideoCardProps {
 
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current = null;
       }
     };
   }, []);
@@ -41,6 +42,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     setIsHovered(false);
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current = null;
     }
     if (videoRef.current) {
       videoRef.current.pause();
