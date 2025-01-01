@@ -143,7 +143,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
         .insert({
           user_id: user.id,
           video_id: video.id,
-          prompt: prompt,
+          prompt: prompt || null, // Allow null prompt
           status: "processing",
         })
         .select()
@@ -151,16 +151,22 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
 
       if (generationError) throw generationError;
 
-      // Only include negativePrompt in the API call if it's not empty
-      const apiParams = {
+      // Only include defined parameters in the API call
+      const apiParams: any = {
         video_url: videoUrl,
-        prompt: prompt,
         seed: advancedSettings.seed,
         duration: advancedSettings.duration,
         num_steps: advancedSettings.numSteps,
         cfg_strength: advancedSettings.cfgStrength,
-        ...(advancedSettings.negativePrompt && { negative_prompt: advancedSettings.negativePrompt })
       };
+
+      // Only add prompt and negative_prompt if they are provided
+      if (prompt) {
+        apiParams.prompt = prompt;
+      }
+      if (advancedSettings.negativePrompt) {
+        apiParams.negative_prompt = advancedSettings.negativePrompt;
+      }
 
       const { data: prediction, error: predictionError } = await supabase.functions.invoke("mmaudio", {
         body: {

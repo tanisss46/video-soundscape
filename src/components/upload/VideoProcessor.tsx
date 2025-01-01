@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
-import { VideoAnalysis } from "./VideoAnalysis";
 import { PromptInput } from "./PromptInput";
 import { Loader2 } from "lucide-react";
 
@@ -35,7 +34,8 @@ export const VideoProcessor = ({
   });
 
   const handleProcess = () => {
-    onProcess(prompt || "ambient sound matching the video content", advancedSettings);
+    // Pass the prompt directly without any default value
+    onProcess(prompt, advancedSettings);
   };
 
   return (
