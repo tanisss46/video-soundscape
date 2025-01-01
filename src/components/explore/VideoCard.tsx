@@ -7,7 +7,6 @@ interface VideoCardProps {
     id: string;
     title: string;
     video_url: string;
-    created_at: string;
     user_generations: { audio_url: string | null }[] | null;
   };
 }
@@ -15,6 +14,7 @@ interface VideoCardProps {
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
   // Cleanup audio on unmount
@@ -35,6 +35,9 @@ export const VideoCard = ({ video }: VideoCardProps) => {
       }
       audioRef.current.play();
     }
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
   };
 
   const handleMouseLeave = () => {
@@ -42,6 +45,10 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
     }
   };
 
@@ -53,18 +60,15 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     >
       <CardContent className="p-0 relative">
         <video 
+          ref={videoRef}
           src={video.video_url}
-          className="w-full aspect-video object-cover"
+          className="w-full aspect-video object-cover cursor-pointer"
           loop
           muted
           playsInline
-          {...(isHovered ? { autoPlay: true } : {})}
         />
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium truncate text-white">
-              {new Date(video.created_at).toLocaleDateString()}
-            </p>
+          <div className="flex items-center justify-end">
             <button className="text-white/80 hover:text-white transition-colors">
               <Heart className="h-5 w-5" />
             </button>

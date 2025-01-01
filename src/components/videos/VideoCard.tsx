@@ -29,7 +29,7 @@ export const VideoCard = ({
       <CardContent className="p-0 relative">
         <video 
           src={video.video_url} 
-          className="w-full aspect-video object-cover"
+          className="w-full aspect-video object-cover cursor-pointer"
           controls={false}
           loop
           muted
@@ -39,28 +39,23 @@ export const VideoCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-white">
-              {new Date(video.created_at).toLocaleDateString()}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/20"
-                onClick={onDownload}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/20"
-                onClick={onDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/80 hover:text-white hover:bg-white/20"
+              onClick={onDownload}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/80 hover:text-white hover:bg-white/20"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
