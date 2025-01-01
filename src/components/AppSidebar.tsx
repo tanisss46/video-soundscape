@@ -1,4 +1,4 @@
-import { Home, Video, FolderOpen, Settings } from "lucide-react";
+import { Home, Video, FolderOpen, Settings, Compass } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,11 @@ const menuItems = [
     title: "Home",
     icon: Home,
     url: "/",
+  },
+  {
+    title: "Explore",
+    icon: Compass,
+    url: "/explore",
   },
   {
     title: "AI Videos",
