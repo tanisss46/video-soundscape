@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
@@ -37,7 +37,7 @@ export const VideoProcessor = ({
   });
 
   // Update prompt when analysis result changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (analysisResult) {
       setPrompt(analysisResult);
     }
