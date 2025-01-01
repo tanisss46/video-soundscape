@@ -35,31 +35,14 @@ export const VideoProcessor = ({
   });
 
   const handleProcess = async () => {
+    if (file && !prompt) {
+      await onAnalyze();
+    }
     onProcess(prompt, advancedSettings);
   };
 
   return (
     <div className="space-y-4">
-      <Button
-        type="button"
-        onClick={onAnalyze}
-        disabled={isAnalyzing || !file}
-        className="w-full"
-        variant="secondary"
-      >
-        {isAnalyzing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Analyzing Video...
-          </>
-        ) : (
-          <>
-            <Scan className="mr-2 h-4 w-4" />
-            Analyze Video Content
-          </>
-        )}
-      </Button>
-
       {(isUploading || isProcessing || isAnalyzing) && (
         <ProcessingStatus 
           status={
@@ -101,8 +84,13 @@ export const VideoProcessor = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
           </>
+        ) : isAnalyzing ? (
+          <>
+            <Scan className="mr-2 h-4 w-4" />
+            Analyzing Video...
+          </>
         ) : (
-          "Generate Sound Effect"
+          prompt ? "Generate Sound Effect" : "Analyze & Generate Sound Effect"
         )}
       </Button>
     </div>
