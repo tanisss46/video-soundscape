@@ -1,7 +1,13 @@
-export interface UserProfile {
+export interface Profile {
   id: string;
-  username?: string | null;
-  avatar_url?: string | null;
+  username?: string;
+  avatar_url?: string;
   credits: number;
-  updated_at?: string | null;
+  updated_at?: string;
+}
+
+export interface User {
+  id: string;
+  email?: string;
+  profile?: Profile;
 }
