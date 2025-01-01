@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AdvancedSettings } from "@/components/upload/AdvancedSettings";
 import { AdvancedSettingsValues } from "@/types/video";
 import { PromptInput } from "./PromptInput";
+import { VideoAnalysis } from "./VideoAnalysis";
 import { Loader2 } from "lucide-react";
 
 interface VideoProcessorProps {
@@ -34,30 +35,16 @@ export const VideoProcessor = ({
   });
 
   const handleProcess = () => {
-    // Pass the prompt directly without any default value
     onProcess(prompt, advancedSettings);
   };
 
   return (
     <div className="space-y-4">
-      {file && (
-        <Button
-          type="button"
-          onClick={onAnalyze}
-          disabled={isAnalyzing}
-          className="w-full"
-          variant="secondary"
-        >
-          {isAnalyzing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Video...
-            </>
-          ) : (
-            "Analyze Video"
-          )}
-        </Button>
-      )}
+      <VideoAnalysis
+        file={file}
+        isAnalyzing={isAnalyzing}
+        onAnalyze={onAnalyze}
+      />
 
       <PromptInput
         prompt={prompt}

@@ -143,7 +143,7 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
         .insert({
           user_id: user.id,
           video_id: video.id,
-          prompt: prompt || null, // Allow null prompt
+          prompt: prompt || null,
           status: "processing",
         })
         .select()
@@ -151,7 +151,6 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
 
       if (generationError) throw generationError;
 
-      // Only include defined parameters in the API call
       const apiParams: any = {
         video_url: videoUrl,
         seed: advancedSettings.seed,
@@ -160,7 +159,6 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
         cfg_strength: advancedSettings.cfgStrength,
       };
 
-      // Only add prompt and negative_prompt if they are provided
       if (prompt) {
         apiParams.prompt = prompt;
       }

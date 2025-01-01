@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Scan } from "lucide-react";
 
 interface VideoAnalysisProps {
   file: File | null;
@@ -11,23 +11,24 @@ export const VideoAnalysis = ({ file, isAnalyzing, onAnalyze }: VideoAnalysisPro
   if (!file) return null;
 
   return (
-    <div className="mt-4">
-      <Button
-        type="button"
-        onClick={onAnalyze}
-        disabled={isAnalyzing}
-        className="w-full"
-        variant="secondary"
-      >
-        {isAnalyzing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Analyzing Video...
-          </>
-        ) : (
-          "Analyze Video"
-        )}
-      </Button>
-    </div>
+    <Button
+      type="button"
+      onClick={onAnalyze}
+      disabled={isAnalyzing}
+      className="w-full"
+      variant="secondary"
+    >
+      {isAnalyzing ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Analyzing Video...
+        </>
+      ) : (
+        <>
+          <Scan className="mr-2 h-4 w-4" />
+          Analyze Video
+        </>
+      )}
+    </Button>
   );
 };
