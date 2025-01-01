@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart } from "lucide-react";
+import { Heart, Volume2, VolumeX } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface VideoCardProps {
@@ -13,6 +13,7 @@ interface VideoCardProps {
 
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
@@ -29,7 +30,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (audioUrl) {
+    if (audioUrl && isSoundEnabled) {
       if (!audioRef.current) {
         audioRef.current = new Audio(audioUrl);
       }
@@ -52,6 +53,17 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     }
   };
 
+  const toggleSound = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSoundEnabled(!isSoundEnabled);
+    if (!isSoundEnabled && isHovered && audioRef.current && audioUrl) {
+      audioRef.current.play();
+    } else if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
+
   return (
     <Card 
       className="group overflow-hidden bg-accent/50 border-accent hover:border-primary/50 transition-all duration-300"
@@ -68,13 +80,23 @@ export const VideoCard = ({ video }: VideoCardProps) => {
           playsInline
         />
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <button 
+              className="text-white/80 hover:text-white transition-colors"
+              onClick={toggleSound}
+            >
+              {isSoundEnabled ? (
+                <Volume2 className="h-5 w-5" />
+              ) : (
+                <VolumeX className="h-5 w-5" />
+              )}
+            </button>
             <button className="text-white/80 hover:text-white transition-colors">
               <Heart className="h-5 w-5" />
             </button>
           </div>
         </div>
-        {audioUrl && isHovered && (
+        {audioUrl && isHovered && isSoundEnabled && (
           <div className="absolute top-2 right-2">
             <span className="text-xs bg-black/60 text-white px-2 py-1 rounded-full">
               ♪ Playing sound effects...
