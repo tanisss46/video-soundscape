@@ -44,6 +44,7 @@ export default function Explore() {
               Easily add AI-generated sound effects to your videos. Upload your clip and let our AI do the rest.
             </p>
             <Button 
+              variant="web3"
               size="lg" 
               className="mt-4"
               onClick={() => navigate('/create-sound-effect')}
