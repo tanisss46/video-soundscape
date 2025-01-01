@@ -1,9 +1,5 @@
 import * as React from "react"
-
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -167,6 +163,23 @@ function toast({ ...props }: Toast) {
     update,
   }
 }
+
+// Add success and error methods to toast
+toast.success = (description: string, props?: Omit<Toast, "description">) => {
+  return toast({
+    variant: "success",
+    description,
+    ...props,
+  });
+};
+
+toast.error = (description: string, props?: Omit<Toast, "description">) => {
+  return toast({
+    variant: "error",
+    description,
+    ...props,
+  });
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)

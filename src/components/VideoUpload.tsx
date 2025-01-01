@@ -89,6 +89,7 @@ export const VideoUpload = ({
         toast({
           title: "Success",
           description: "Video analysis completed",
+          variant: "success",
         });
         if (onAnalyzeComplete) {
           onAnalyzeComplete();
@@ -275,3 +276,4 @@ export const VideoUpload = ({
     </div>
   );
 };
+
