@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 interface VideoCardProps {
   video: {
@@ -13,30 +13,13 @@ interface VideoCardProps {
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
-
-  useEffect(() => {
-    // Initialize audio element when component mounts
-    if (audioUrl) {
-      audioRef.current = new Audio(audioUrl);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current = null;
-      }
-    };
-  }, [audioUrl]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.play().catch(error => {
         console.error("Audio playback error:", error);
       });
     }
@@ -49,10 +32,6 @@ export const VideoCard = ({ video }: VideoCardProps) => {
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
