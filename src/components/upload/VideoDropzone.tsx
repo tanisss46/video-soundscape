@@ -22,7 +22,24 @@ export const VideoDropzone = ({
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file && file.type.startsWith("video/")) {
-      onFileSelect(file);
+      // Check video duration
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        if (video.duration > 30) {
+          toast({
+            title: "Video too long",
+            description: "Please upload a video that is 30 seconds or shorter",
+            variant: "destructive",
+          });
+          return;
+        }
+        onFileSelect(file);
+      };
+
+      video.src = URL.createObjectURL(file);
     } else {
       toast({
         title: "Invalid file type",
@@ -81,7 +98,7 @@ export const VideoDropzone = ({
               Drop your video here or click to browse
             </p>
             <p className="text-sm text-muted-foreground">
-              Supports MP4, MOV, or AVI
+              Supported formats: MP4, MOV, AVI. Max length: 30s.
             </p>
           </div>
         </div>

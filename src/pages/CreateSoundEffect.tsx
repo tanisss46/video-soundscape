@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoUpload } from "@/components/VideoUpload";
+import { StepIndicator } from "@/components/steps/StepIndicator";
 
 export default function CreateSoundEffect() {
   const [userCredits, setUserCredits] = useState<number | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,6 +43,8 @@ export default function CreateSoundEffect() {
       });
       return false;
     }
+    setCurrentStep(3);
+    setCompletedSteps([1, 2]);
     return true;
   };
 
@@ -61,10 +66,20 @@ export default function CreateSoundEffect() {
     }
 
     setUserCredits(data.credits);
+    setCurrentStep(4);
+    setCompletedSteps([1, 2, 3]);
+    
     toast({
-      title: "Success",
-      description: `1 credit used. Remaining credits: ${data.credits}`,
+      title: "Success!",
+      description: "Your video with sound effect is ready! You can download it now.",
+      variant: "default",
+      className: "bg-green-500 text-white",
     });
+  };
+
+  const handleFileSelect = () => {
+    setCurrentStep(2);
+    setCompletedSteps([1]);
   };
 
   return (
@@ -76,9 +91,15 @@ export default function CreateSoundEffect() {
         </p>
       </div>
 
+      <StepIndicator 
+        currentStep={currentStep}
+        completedSteps={completedSteps}
+      />
+
       <VideoUpload 
         onBeforeProcess={handleBeforeProcess}
         onAfterProcess={handleAfterProcess}
+        onFileSelect={handleFileSelect}
       />
     </div>
   );

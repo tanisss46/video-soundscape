@@ -9,9 +9,14 @@ import { AdvancedSettingsValues } from "@/types/video";
 interface VideoUploadProps {
   onBeforeProcess?: () => Promise<boolean>;
   onAfterProcess?: () => Promise<void>;
+  onFileSelect?: () => void;
 }
 
-export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProps) => {
+export const VideoUpload = ({ 
+  onBeforeProcess, 
+  onAfterProcess,
+  onFileSelect 
+}: VideoUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -25,6 +30,9 @@ export const VideoUpload = ({ onBeforeProcess, onAfterProcess }: VideoUploadProp
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     setVideoUrl(URL.createObjectURL(file));
+    if (onFileSelect) {
+      onFileSelect();
+    }
   };
 
   const resetUpload = () => {
