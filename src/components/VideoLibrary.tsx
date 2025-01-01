@@ -14,35 +14,43 @@ export const VideoLibrary = () => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const { toast } = useToast();
 
+  // Updated query to properly fetch videos with their generations
   const { data: videos, isLoading, error } = useQuery({
     queryKey: ['videos'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
       
-      const query = supabase
+      console.log("Fetching videos for user:", user.id); // Debug log
+
+      const { data, error } = await supabase
         .from('videos')
         .select(`
-          id,
-          title,
-          video_url,
-          created_at,
-          user_generations!video_id (
+          *,
+          user_generations (
+            id,
+            prompt,
             audio_url,
             status
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      const { data, error } = await query;
-      
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching videos:", error); // Debug log
+        throw error;
+      }
 
+      console.log("Fetched videos:", data); // Debug log
+
+      // Transform the data to match the Video type
       return data.map(video => ({
         ...video,
         audio_url: video.user_generations?.[0]?.audio_url
       })) as Video[];
-    }
+    },
+    refetchOnMount: true, // Add this to ensure fresh data when component mounts
   });
 
   const handleMouseEnter = (videoId: string, audioUrl?: string) => {
@@ -127,7 +135,9 @@ export const VideoLibrary = () => {
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Error loading videos</AlertDescription>
+        <AlertDescription>
+          Error loading videos: {error.message}
+        </AlertDescription>
       </Alert>
     );
   }
