@@ -66,20 +66,20 @@ export const StepIndicator = ({
                 className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
                   isCompleted 
-                    ? "bg-green-100 text-green-600" 
+                    ? "bg-purple-100 text-purple-600" 
                     : isActive 
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-purple-600 text-white"
                       : "bg-muted text-muted-foreground"
                 )}
               >
                 {isLoading ? step.loadingIcon : 
-                 isCompleted ? <Check className="w-5 h-5 text-green-600" /> : 
+                 isCompleted ? <Check className="w-5 h-5 text-purple-600" /> : 
                  step.icon}
               </div>
               <span className={cn(
                 "text-sm font-medium",
-                isCompleted && "text-green-600",
-                isActive && "text-primary"
+                isCompleted && "text-purple-600",
+                isActive && "text-purple-600"
               )}>
                 {step.label}
               </span>
@@ -87,7 +87,9 @@ export const StepIndicator = ({
                 <div
                   className={cn(
                     "absolute top-5 left-[40px] w-[calc(100%-20px)] h-[2px] transition-all duration-300",
-                    isCompleted ? "bg-green-500" : "bg-muted"
+                    isCompleted || (isActive && completedSteps.includes(index + 1))
+                      ? "bg-purple-500"
+                      : "bg-muted"
                   )}
                 />
               )}

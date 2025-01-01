@@ -46,7 +46,7 @@ export default function CreateSoundEffect() {
       return false;
     }
     setCurrentStep(3);
-    setCompletedSteps([1, 2]);
+    setCompletedSteps(prev => [...prev, 2]);
     setIsProcessing(true);
     return true;
   };
@@ -69,7 +69,7 @@ export default function CreateSoundEffect() {
 
     setUserCredits(data.credits);
     setCurrentStep(4);
-    setCompletedSteps([1, 2, 3]);
+    setCompletedSteps(prev => [...prev, 3]);
     setIsProcessing(false);
     
     toast({
@@ -91,7 +91,7 @@ export default function CreateSoundEffect() {
 
   const handleAnalyzeComplete = () => {
     setIsAnalyzing(false);
-    setCompletedSteps([1, 2]);
+    setCompletedSteps(prev => [...prev, 2]);
     setCurrentStep(3);
   };
 
