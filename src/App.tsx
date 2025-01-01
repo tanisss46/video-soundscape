@@ -10,6 +10,7 @@ import AuthPage from "./pages/Auth";
 import Explore from "./pages/Explore";
 import { AppSidebar } from "./components/AppSidebar";
 import { Navbar } from "./components/Navbar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -45,13 +46,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex h-screen bg-[#0f111a]">
-      <AppSidebar />
-      <main className="flex-1 overflow-auto pt-16">
-        <Navbar />
-        {children}
-      </main>
-    </div>
+    <SidebarProvider defaultOpen>
+      <div className="flex h-screen w-full bg-[#0f111a]">
+        <AppSidebar />
+        <main className="flex-1 overflow-auto pt-16">
+          <Navbar />
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
