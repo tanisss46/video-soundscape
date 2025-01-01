@@ -5,14 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import Index from "./pages/Index";
-import AuthPage from "./pages/Auth";
 import Explore from "./pages/Explore";
+import CreateSoundEffect from "./pages/CreateSoundEffect";
+import MyVideos from "./pages/MyVideos";
+import AuthPage from "./pages/Auth";
 import { AppSidebar } from "./components/AppSidebar";
 import { Navbar } from "./components/Navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -63,17 +63,24 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={<Navigate to="/explore" replace />} />
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <AppLayout>
-            <Index />
-          </AppLayout>
-        </ProtectedRoute>
-      } />
       <Route path="/explore" element={
         <AppLayout>
           <Explore />
         </AppLayout>
+      } />
+      <Route path="/create-sound-effect" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <CreateSoundEffect />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/my-videos" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <MyVideos />
+          </AppLayout>
+        </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/explore" replace />} />
     </Routes>
