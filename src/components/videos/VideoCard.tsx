@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Volume2, VolumeX } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { Video } from "@/types/video";
 import { useState, useRef, useEffect } from "react";
 
@@ -21,7 +21,6 @@ export const VideoCard = ({
   onDownload,
   onDelete,
 }: VideoCardProps) => {
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -34,11 +33,6 @@ export const VideoCard = ({
       }
     }
   }, [isPlaying]);
-
-  const toggleSound = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsSoundEnabled(!isSoundEnabled);
-  };
 
   return (
     <Card 
@@ -59,39 +53,27 @@ export const VideoCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="flex items-center justify-between">
-            <button 
-              className="text-white/80 hover:text-white transition-colors"
-              onClick={toggleSound}
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/80 hover:text-white hover:bg-white/20"
+              onClick={onDownload}
             >
-              {isSoundEnabled ? (
-                <Volume2 className="h-5 w-5" />
-              ) : (
-                <VolumeX className="h-5 w-5" />
-              )}
-            </button>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/20"
-                onClick={onDownload}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/20"
-                onClick={onDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/80 hover:text-white hover:bg-white/20"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-        {isPlaying && video.audio_url && isSoundEnabled && (
+        {isPlaying && video.audio_url && (
           <div className="absolute top-2 right-2">
             <span className="text-xs bg-black/60 text-white px-2 py-1 rounded-full animate-pulse">
               ♪ Playing sound effects...
