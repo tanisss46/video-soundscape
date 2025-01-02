@@ -1,15 +1,9 @@
-import { Activity, Bell, ChevronDown, Info, Loader, X } from "lucide-react";
+import { Activity, Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
+import { ActivityList } from "./activity/ActivityList";
 
 interface ProcessingVideo {
   id: number;
@@ -35,8 +29,9 @@ export function ActivityPanel() {
         .from('user_generations')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['analyzing', 'processing'])
-        .order('id', { ascending: false });
+        .in('status', ['analyzing', 'processing', 'completed'])
+        .order('id', { ascending: false })
+        .limit(10); // Limit to last 10 generations
 
       if (data) {
         setProcessingVideos(data);
@@ -75,12 +70,12 @@ export function ActivityPanel() {
                 description: "Your video is ready to download.",
                 variant: "success"
               });
-              // Remove completed video after 5 seconds
+              // Remove completed video after 30 seconds
               setTimeout(() => {
                 setProcessingVideos(prev => 
                   prev.filter(video => video.id !== updatedVideo.id)
                 );
-              }, 5000);
+              }, 30000); // Increased to 30 seconds to give more time to see completion
             } else if (updatedVideo.status === 'error') {
               toast({
                 title: "Processing Error",
@@ -101,33 +96,6 @@ export function ActivityPanel() {
   if (processingVideos.length === 0) {
     return null;
   }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'analyzing':
-        return (
-          <Badge className="bg-[#FFA500] flex items-center gap-1">
-            <Loader className="h-3 w-3 animate-spin" />
-            Analyzing
-          </Badge>
-        );
-      case 'processing':
-        return (
-          <Badge className="bg-[#FFA500] flex items-center gap-1">
-            <Loader className="h-3 w-3 animate-spin" />
-            Processing
-          </Badge>
-        );
-      case 'completed':
-        return <Badge className="bg-[#28A745]">Completed</Badge>;
-      case 'downloaded':
-        return <Badge className="bg-[#28A745]">Downloaded</Badge>;
-      case 'error':
-        return <Badge className="bg-[#DC3545]">Failed</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
 
   return (
     <>
@@ -162,49 +130,7 @@ export function ActivityPanel() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-
-            <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
-              <div className="space-y-3">
-                {processingVideos.map((video) => (
-                  <Collapsible key={video.id}>
-                    <div className="p-3 rounded-lg border bg-card">
-                      <div className="flex items-start justify-between gap-2">
-                        {video.video_url && (
-                          <div className="w-16 h-16 rounded overflow-hidden bg-muted">
-                            <video
-                              src={video.video_url}
-                              className="w-full h-full object-cover"
-                              muted
-                              playsInline
-                              autoPlay
-                              loop
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-sm font-medium truncate">
-                              Process #{video.id}
-                            </span>
-                            {getStatusBadge(video.status)}
-                          </div>
-                          <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground hover:text-foreground">
-                            <Info className="h-3 w-3 mr-1" />
-                            Show details
-                            <ChevronDown className="h-3 w-3 ml-1" />
-                          </CollapsibleTrigger>
-                        </div>
-                      </div>
-                      <CollapsibleContent className="mt-2">
-                        <p className="text-sm text-muted-foreground">
-                          {video.prompt}
-                        </p>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>
-                ))}
-              </div>
-            </ScrollArea>
+            <ActivityList videos={processingVideos} />
           </div>
         </div>
       )}
