@@ -3,6 +3,34 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoUpload } from "@/components/VideoUpload";
 import { StepIndicator } from "@/components/steps/StepIndicator";
+import { Upload, Scan, Music, Check, LoaderCircle } from "lucide-react";
+
+const steps = [
+  { 
+    number: 1, 
+    label: "Upload", 
+    icon: <Upload className="w-5 h-5" />,
+    loadingIcon: <LoaderCircle className="w-5 h-5 animate-spin" />
+  },
+  { 
+    number: 2, 
+    label: "Analyze", 
+    icon: <Scan className="w-5 h-5" />,
+    loadingIcon: <LoaderCircle className="w-5 h-5 animate-spin" />
+  },
+  { 
+    number: 3, 
+    label: "Add Sound Effect", 
+    icon: <Music className="w-5 h-5" />,
+    loadingIcon: <LoaderCircle className="w-5 h-5 animate-spin" />
+  },
+  { 
+    number: 4, 
+    label: "Completed", 
+    icon: <Check className="w-5 h-5" />,
+    loadingIcon: <LoaderCircle className="w-5 h-5 animate-spin" />
+  },
+];
 
 export default function CreateSoundEffect() {
   const [userCredits, setUserCredits] = useState<number | null>(null);
@@ -39,7 +67,7 @@ export default function CreateSoundEffect() {
     
     if (userCredits < 1) {
       toast({
-        variant: "error",
+        variant: "destructive",
         title: "Error",
         description: "Insufficient credits",
       });
@@ -108,6 +136,7 @@ export default function CreateSoundEffect() {
         completedSteps={completedSteps}
         isAnalyzing={isAnalyzing}
         isProcessing={isProcessing}
+        steps={steps}
       />
 
       <VideoUpload 
