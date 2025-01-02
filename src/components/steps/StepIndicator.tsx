@@ -23,11 +23,10 @@ export function StepIndicator({
   isProcessing,
   steps,
 }: StepIndicatorProps) {
-  const isLoading = (step: Step) => {
-    if (isAnalyzing && step.number === 2) return true;
-    if (isProcessing && step.number === 3) return true;
-    return false;
-  };
+  // Calculate progress width safely
+  const progressWidth = completedSteps && completedSteps.length > 0 && steps && steps.length > 0
+    ? `${(Math.max(...completedSteps) / steps.length) * 100}%`
+    : "0%";
 
   return (
     <div className="w-full mb-8">
@@ -36,9 +35,7 @@ export function StepIndicator({
         <div className="absolute top-5 left-0 w-full h-[2px] bg-muted">
           <div 
             className="h-full bg-purple-600 transition-all duration-300"
-            style={{ 
-              width: `${(Math.max(...completedSteps) / steps.length) * 100}%`
-            }}
+            style={{ width: progressWidth }}
           />
         </div>
 
