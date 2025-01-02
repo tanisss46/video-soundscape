@@ -39,13 +39,13 @@ const getStatusBadge = (status: string) => {
 const getStatusMessage = (status: string) => {
   switch (status) {
     case 'analyzing':
-      return 'Analyzing video...';
+      return 'Analyzing video content...';
     case 'processing':
       return 'Generating sound effect...';
     case 'completed':
-      return 'Sound effect added';
+      return 'Sound effect generated successfully';
     case 'downloaded':
-      return 'Downloaded';
+      return 'Video downloaded';
     case 'error':
       return 'Error occurred';
     default:
@@ -65,7 +65,7 @@ export const ActivityIndicator = () => {
           .from('user_generations')
           .select('*')
           .eq('user_id', currentUser.user.id)
-          .in('status', ['processing', 'analyzing'])
+          .in('status', ['analyzing', 'processing', 'completed'])
           .order('id', { ascending: false });
         
         if (data) {
@@ -93,19 +93,24 @@ export const ActivityIndicator = () => {
             setProcessingVideos(prev => 
               prev.map(video => 
                 video.id === updatedVideo.id ? updatedVideo : video
-              ).filter(video => 
-                video.status !== 'completed' && 
-                video.status !== 'error' && 
-                video.status !== 'downloaded'
               )
             );
             
-            if (updatedVideo.status === 'completed') {
+            // Only remove completed items after 5 seconds
+            if (updatedVideo.status === 'completed' || updatedVideo.status === 'downloaded') {
               setTimeout(() => {
                 setProcessingVideos(prev => 
                   prev.filter(v => v.id !== updatedVideo.id)
                 );
               }, 5000);
+            }
+
+            // Show toast for completed generations
+            if (updatedVideo.status === 'completed') {
+              toast({
+                title: "Success",
+                description: "Sound effect generated successfully!",
+              });
             }
           }
         }
