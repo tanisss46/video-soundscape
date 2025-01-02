@@ -7,7 +7,7 @@ interface ActivityBadgeProps {
 export const ActivityBadge = ({ status }: ActivityBadgeProps) => {
   switch (status) {
     case 'processing':
-      return <Badge className="bg-[#FFA500]">Processing</Badge>;
+      return <Badge className="bg-[#FFA500]">Generating</Badge>;
     case 'analyzing':
       return <Badge className="bg-[#FFA500]">Analyzing</Badge>;
     case 'completed':

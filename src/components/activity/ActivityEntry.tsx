@@ -36,7 +36,7 @@ export const ActivityEntry = ({ id, prompt, status, video_url, onRemove }: Activ
                 ? "Processing complete"
                 : status === 'analyzing'
                 ? "Analyzing video..."
-                : "Processing video..."}
+                : "Generating sound effect..."}
             </span>
             <ActivityBadge status={status} />
           </div>
