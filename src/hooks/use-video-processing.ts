@@ -59,12 +59,16 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
 
       if (videoError) throw videoError;
 
+      // Ensure we always have a prompt value
+      const defaultPrompt = "Generate sound effect based on video content";
+      const finalPrompt = prompt.trim() || defaultPrompt;
+
       const { data: generation, error: generationError } = await supabase
         .from("user_generations")
         .insert({
           user_id: user.id,
           video_id: video.id,
-          prompt: prompt || null,
+          prompt: finalPrompt,
           status: "processing",
         })
         .select()
@@ -78,7 +82,7 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
         duration: advancedSettings.duration,
         num_steps: advancedSettings.numSteps,
         cfg_strength: advancedSettings.cfgStrength,
-        ...(prompt && { prompt }),
+        prompt: finalPrompt,
         ...(advancedSettings.negativePrompt && { 
           negative_prompt: advancedSettings.negativePrompt 
         }),
