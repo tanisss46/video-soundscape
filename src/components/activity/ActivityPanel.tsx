@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { ActivityEntry } from "./ActivityEntry";
 
 interface ProcessingVideo {
@@ -18,7 +17,6 @@ interface ProcessingVideo {
 export function ActivityPanel() {
   const [processingVideos, setProcessingVideos] = useState<ProcessingVideo[]>([]);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const channel = supabase
@@ -33,10 +31,6 @@ export function ActivityPanel() {
         (payload) => {
           if (payload.new && payload.eventType === 'INSERT') {
             setProcessingVideos(prev => [...prev, payload.new as ProcessingVideo]);
-            toast({
-              title: "Processing Started",
-              description: "Processing your video... Please wait.",
-            });
           } else if (payload.new && payload.eventType === 'UPDATE') {
             const updatedVideo = payload.new as ProcessingVideo;
             setProcessingVideos(prev => 
@@ -46,23 +40,12 @@ export function ActivityPanel() {
             );
             
             if (updatedVideo.status === 'completed') {
-              toast({
-                title: "Video Ready",
-                description: "Your video is ready to download.",
-                variant: "success"
-              });
               // Remove completed video after 5 seconds
               setTimeout(() => {
                 setProcessingVideos(prev => 
                   prev.filter(video => video.id !== updatedVideo.id)
                 );
               }, 5000);
-            } else if (updatedVideo.status === 'error') {
-              toast({
-                title: "Processing Error",
-                description: updatedVideo.error_message || "An error occurred while processing your video.",
-                variant: "destructive",
-              });
             }
           }
         }
@@ -72,7 +55,7 @@ export function ActivityPanel() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [toast]);
+  }, []);
 
   if (processingVideos.length === 0) {
     return null;

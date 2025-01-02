@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { VideoDropzone } from "./upload/VideoDropzone";
@@ -28,7 +27,6 @@ export const VideoUpload = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string>("");
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleFileSelect = (file: File) => {
@@ -46,14 +44,7 @@ export const VideoUpload = ({
   };
 
   const handleAnalyze = async () => {
-    if (!selectedFile) {
-      toast({
-        title: "Error",
-        description: "Please upload a video first",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!selectedFile) return;
 
     if (onAnalyzeStart) {
       onAnalyzeStart();
@@ -86,22 +77,12 @@ export const VideoUpload = ({
 
       if (data.output) {
         setAnalysisResult(data.output);
-        toast({
-          title: "Success",
-          description: "Video analysis completed",
-          variant: "success",
-        });
         if (onAnalyzeComplete) {
           onAnalyzeComplete();
         }
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -226,12 +207,6 @@ export const VideoUpload = ({
 
           queryClient.invalidateQueries({ queryKey: ['videos'] });
 
-          toast({
-            variant: "success",
-            title: "Success",
-            description: "Video processing completed!",
-          });
-
           if (onAfterProcess) {
             await onAfterProcess();
           }
@@ -246,11 +221,6 @@ export const VideoUpload = ({
 
     } catch (error: any) {
       console.error("Error processing video:", error);
-      toast({
-        variant: "error",
-        title: "Error",
-        description: error.message || "Failed to process video. Please try again.",
-      });
       setIsProcessing(false);
     }
   };
@@ -276,4 +246,3 @@ export const VideoUpload = ({
     </div>
   );
 };
-
