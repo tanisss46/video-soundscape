@@ -1,4 +1,4 @@
-import { Activity, Bell, ChevronDown, ChevronUp } from "lucide-react";
+import { Activity, Bell, ChevronDown, Info, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
 
 interface ProcessingVideo {
   id: number;
@@ -22,6 +23,7 @@ interface ProcessingVideo {
 
 export function ActivityPanel() {
   const [processingVideos, setProcessingVideos] = useState<ProcessingVideo[]>([]);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,6 +57,12 @@ export function ActivityPanel() {
                 description: "Your video is ready to download.",
                 variant: "success"
               });
+              // Remove completed video after 5 seconds
+              setTimeout(() => {
+                setProcessingVideos(prev => 
+                  prev.filter(video => video.id !== updatedVideo.id)
+                );
+              }, 5000);
             } else if (updatedVideo.status === 'error') {
               toast({
                 title: "Processing Error",
@@ -76,63 +84,98 @@ export function ActivityPanel() {
     return null;
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'processing':
+        return <Badge className="bg-[#FFA500]">Processing</Badge>;
+      case 'completed':
+        return <Badge className="bg-[#28A745]">Completed</Badge>;
+      case 'downloaded':
+        return <Badge className="bg-[#28A745]">Downloaded</Badge>;
+      case 'error':
+        return <Badge className="bg-[#DC3545]">Failed</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <>
+      {!isPanelOpen && (
         <Button
           variant="outline"
           size="icon"
           className="fixed right-4 top-20 h-14 w-14 rounded-full shadow-lg bg-background"
+          onClick={() => setIsPanelOpen(true)}
         >
           <Activity className="h-6 w-6" />
           <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
             {processingVideos.length}
           </span>
         </Button>
-      </SheetTrigger>
-      <SheetContent className="w-[400px]">
-        <div className="flex items-center gap-2 mb-4">
-          <Bell className="h-5 w-5" />
-          <h2 className="text-lg font-semibold">Active Processes</h2>
-        </div>
-        <ScrollArea className="h-[calc(100vh-8rem)]">
-          <div className="space-y-4">
-            {processingVideos.map((video) => (
-              <Collapsible key={video.id}>
-                <div className="p-4 rounded-lg border bg-card">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="font-medium">
-                        {video.status === 'completed' 
-                          ? "Your video is ready to download"
-                          : "Processing your video... Please wait"}
-                      </p>
-                      <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground hover:text-foreground">
-                        Show details
-                        <ChevronDown className="h-3 w-3 ml-1" />
-                      </CollapsibleTrigger>
+      )}
+
+      {isPanelOpen && (
+        <div className="fixed right-4 top-20 w-[320px] bg-background border rounded-lg shadow-lg">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Active Processes</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setIsPanelOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
+              <div className="space-y-3">
+                {processingVideos.map((video) => (
+                  <Collapsible key={video.id}>
+                    <div className="p-3 rounded-lg border bg-card">
+                      <div className="flex items-start justify-between gap-2">
+                        {video.video_url && (
+                          <div className="w-16 h-16 rounded overflow-hidden">
+                            <video
+                              src={video.video_url}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-sm font-medium truncate">
+                              {video.status === 'completed' 
+                                ? "Processing complete"
+                                : "Processing video..."}
+                            </span>
+                            {getStatusBadge(video.status)}
+                          </div>
+                          <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground hover:text-foreground">
+                            <Info className="h-3 w-3 mr-1" />
+                            Show details
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          </CollapsibleTrigger>
+                        </div>
+                      </div>
+                      <CollapsibleContent className="mt-2">
+                        <p className="text-sm text-muted-foreground">
+                          {video.prompt}
+                        </p>
+                      </CollapsibleContent>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      video.status === 'completed' 
-                        ? 'bg-primary/20 text-primary'
-                        : video.status === 'error'
-                        ? 'bg-destructive/20 text-destructive'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {video.status}
-                    </span>
-                  </div>
-                  <CollapsibleContent className="mt-2">
-                    <p className="text-sm text-muted-foreground">
-                      {video.prompt}
-                    </p>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            ))}
+                  </Collapsible>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+        </div>
+      )}
+    </>
   );
 }
