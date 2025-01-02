@@ -57,6 +57,10 @@ export function ActivityPanel() {
     };
   }, []);
 
+  const handleRemoveEntry = (id: number) => {
+    setProcessingVideos(prev => prev.filter(video => video.id !== id));
+  };
+
   if (processingVideos.length === 0) {
     return null;
   }
@@ -104,6 +108,7 @@ export function ActivityPanel() {
                     prompt={video.prompt}
                     status={video.status}
                     video_url={video.video_url}
+                    onRemove={handleRemoveEntry}
                   />
                 ))}
               </div>

@@ -8,6 +8,8 @@ export const ActivityBadge = ({ status }: ActivityBadgeProps) => {
   switch (status) {
     case 'processing':
       return <Badge className="bg-[#FFA500]">Processing</Badge>;
+    case 'analyzing':
+      return <Badge className="bg-[#FFA500]">Analyzing</Badge>;
     case 'completed':
       return <Badge className="bg-[#28A745]">Completed</Badge>;
     case 'downloaded':
