@@ -1,10 +1,15 @@
-import { Activity, Bell } from "lucide-react";
+import { Activity, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface ProcessingVideo {
   id: number;
@@ -20,7 +25,6 @@ export function ActivityPanel() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Subscribe to changes in user_generations table
     const channel = supabase
       .channel('user_generations_changes')
       .on(
@@ -31,12 +35,11 @@ export function ActivityPanel() {
           table: 'user_generations'
         },
         (payload) => {
-          console.log('Change received!', payload);
           if (payload.new && payload.eventType === 'INSERT') {
             setProcessingVideos(prev => [...prev, payload.new as ProcessingVideo]);
             toast({
-              title: "New Video Processing",
-              description: "Your video is being processed...",
+              title: "Processing Started",
+              description: "Processing your video... Please wait.",
             });
           } else if (payload.new && payload.eventType === 'UPDATE') {
             const updatedVideo = payload.new as ProcessingVideo;
@@ -48,8 +51,9 @@ export function ActivityPanel() {
             
             if (updatedVideo.status === 'completed') {
               toast({
-                title: "Video Ready!",
-                description: "Your video has been processed successfully.",
+                title: "Video Ready",
+                description: "Your video is ready to download.",
+                variant: "success"
               });
             } else if (updatedVideo.status === 'error') {
               toast({
@@ -68,52 +72,63 @@ export function ActivityPanel() {
     };
   }, [toast]);
 
+  if (processingVideos.length === 0) {
+    return null;
+  }
+
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button
           variant="outline"
           size="icon"
-          className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg"
+          className="fixed right-4 top-20 h-14 w-14 rounded-full shadow-lg bg-background"
         >
           <Activity className="h-6 w-6" />
-          {processingVideos.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-              {processingVideos.length}
-            </span>
-          )}
+          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+            {processingVideos.length}
+          </span>
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[400px]">
         <div className="flex items-center gap-2 mb-4">
           <Bell className="h-5 w-5" />
-          <h2 className="text-lg font-semibold">Activity</h2>
+          <h2 className="text-lg font-semibold">Active Processes</h2>
         </div>
         <ScrollArea className="h-[calc(100vh-8rem)]">
           <div className="space-y-4">
             {processingVideos.map((video) => (
-              <div
-                key={video.id}
-                className="p-4 rounded-lg border bg-card text-card-foreground"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium">Video Processing</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {video.prompt || "No prompt provided"}
-                    </p>
+              <Collapsible key={video.id}>
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        {video.status === 'completed' 
+                          ? "Your video is ready to download"
+                          : "Processing your video... Please wait"}
+                      </p>
+                      <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground hover:text-foreground">
+                        Show details
+                        <ChevronDown className="h-3 w-3 ml-1" />
+                      </CollapsibleTrigger>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      video.status === 'completed' 
+                        ? 'bg-primary/20 text-primary'
+                        : video.status === 'error'
+                        ? 'bg-destructive/20 text-destructive'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {video.status}
+                    </span>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    video.status === 'completed' 
-                      ? 'bg-green-100 text-green-700' 
-                      : video.status === 'error'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {video.status}
-                  </span>
+                  <CollapsibleContent className="mt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {video.prompt}
+                    </p>
+                  </CollapsibleContent>
                 </div>
-              </div>
+              </Collapsible>
             ))}
           </div>
         </ScrollArea>
