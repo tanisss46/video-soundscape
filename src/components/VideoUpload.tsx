@@ -24,6 +24,7 @@ export const VideoUpload = ({
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string>("");
+  const [currentGenerationId, setCurrentGenerationId] = useState<number | null>(null);
 
   const { isUploading, isProcessing, processVideo } = useVideoProcessing(onAfterProcess);
 
@@ -39,6 +40,7 @@ export const VideoUpload = ({
     setSelectedFile(null);
     setVideoUrl(null);
     setAnalysisResult("");
+    setCurrentGenerationId(null);
   };
 
   const handleAnalyze = async () => {
@@ -53,6 +55,21 @@ export const VideoUpload = ({
       const timestamp = Date.now();
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `temp_${timestamp}.${fileExt}`;
+
+      // Create a generation record for analysis
+      const { data: generationData, error: generationError } = await supabase
+        .from('user_generations')
+        .insert({
+          prompt: 'Analyzing video content...',
+          status: 'analyzing',
+          video_url: videoUrl
+        })
+        .select()
+        .single();
+
+      if (generationError) throw generationError;
+      
+      setCurrentGenerationId(generationData.id);
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
@@ -75,12 +92,30 @@ export const VideoUpload = ({
 
       if (data.output) {
         setAnalysisResult(data.output);
+        // Update the generation record to completed
+        await supabase
+          .from('user_generations')
+          .update({ 
+            status: 'completed',
+            prompt: data.output
+          })
+          .eq('id', generationData.id);
+
         if (onAnalyzeComplete) {
           onAnalyzeComplete();
         }
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
+      if (currentGenerationId) {
+        await supabase
+          .from('user_generations')
+          .update({ 
+            status: 'error',
+            error_message: error.message
+          })
+          .eq('id', currentGenerationId);
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -95,10 +130,35 @@ export const VideoUpload = ({
     }
 
     try {
+      // Create a generation record for processing
+      const { data: generationData, error: generationError } = await supabase
+        .from('user_generations')
+        .insert({
+          prompt: prompt,
+          status: 'processing',
+          video_url: videoUrl,
+          duration: advancedSettings.duration
+        })
+        .select()
+        .single();
+
+      if (generationError) throw generationError;
+      
+      setCurrentGenerationId(generationData.id);
+
       await processVideo(selectedFile, prompt, advancedSettings);
       resetUpload();
     } catch (error: any) {
       console.error("Error processing video:", error);
+      if (currentGenerationId) {
+        await supabase
+          .from('user_generations')
+          .update({ 
+            status: 'error',
+            error_message: error.message
+          })
+          .eq('id', currentGenerationId);
+      }
     }
   };
 
