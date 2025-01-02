@@ -32,28 +32,34 @@ export function VideoDetailDialog({ video, open, onOpenChange }: VideoDetailDial
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[80vw] h-[80vh] p-0 gap-0 bg-background">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-4 z-50"
-          onClick={handleClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-
         <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] h-full">
-          {/* Video Section */}
-          <div className="h-full">
-            <VideoPlayer videoUrl={video.video_url} audioUrl={audioUrl} />
+          {/* Video Section - 70% width on desktop */}
+          <div className="relative h-full bg-black flex items-center justify-center">
+            <VideoPlayer 
+              videoUrl={video.video_url} 
+              audioUrl={audioUrl} 
+              autoPlay={true}
+            />
           </div>
 
-          {/* Details Section */}
-          <div className="p-6 border-l border-border h-full">
-            <VideoDetails
-              title={video.title}
-              createdAt={video.created_at}
-              prompt={prompt}
-            />
+          {/* Details Section - 30% width on desktop */}
+          <div className="relative h-full border-l border-border overflow-y-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4 z-50"
+              onClick={handleClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            
+            <div className="p-6">
+              <VideoDetails
+                title={video.title}
+                createdAt={video.created_at}
+                prompt={prompt}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>

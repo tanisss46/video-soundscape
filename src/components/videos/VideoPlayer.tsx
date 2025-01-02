@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
@@ -7,35 +7,53 @@ import { cn } from "@/lib/utils";
 interface VideoPlayerProps {
   videoUrl: string;
   audioUrl?: string;
+  autoPlay?: boolean;
 }
 
-export function VideoPlayer({ videoUrl, audioUrl }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [volume, setVolume] = useState(1);
-  const [showVolumeControl, setShowVolumeControl] = useState(false);
+  const [showControls, setShowControls] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handlePlayPause = () => {
-    if (!videoRef.current) return;
-
-    if (isPlaying) {
-      videoRef.current.pause();
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    } else {
-      videoRef.current.play();
-      if (audioUrl && !audioRef.current) {
-        audioRef.current = new Audio(audioUrl);
-      }
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.volume = volume;
-        audioRef.current.play();
-      }
+  useEffect(() => {
+    if (autoPlay) {
+      handlePlay();
     }
-    setIsPlaying(!isPlaying);
+  }, []);
+
+  const handlePlay = () => {
+    if (!videoRef.current) return;
+    
+    videoRef.current.play();
+    if (audioUrl && !audioRef.current) {
+      audioRef.current = new Audio(audioUrl);
+    }
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.volume = volume;
+      audioRef.current.play();
+    }
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    if (!videoRef.current) return;
+    
+    videoRef.current.pause();
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setIsPlaying(false);
+  };
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      handlePause();
+    } else {
+      handlePlay();
+    }
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -47,19 +65,26 @@ export function VideoPlayer({ videoUrl, audioUrl }: VideoPlayerProps) {
   };
 
   return (
-    <div className="relative bg-black flex items-center">
+    <div 
+      className="relative w-full h-full bg-black"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
       <video
         ref={videoRef}
         src={videoUrl}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain aspect-video"
         loop
         muted
         playsInline
-        onMouseEnter={() => setShowVolumeControl(true)}
-        onMouseLeave={() => setShowVolumeControl(false)}
       />
       
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
+      <div 
+        className={cn(
+          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 transition-opacity duration-200",
+          showControls ? "opacity-100" : "opacity-0"
+        )}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -73,14 +98,7 @@ export function VideoPlayer({ videoUrl, audioUrl }: VideoPlayerProps) {
           )}
         </Button>
 
-        <div
-          className={cn(
-            "flex items-center gap-2 transition-opacity duration-200",
-            showVolumeControl ? "opacity-100" : "opacity-0"
-          )}
-          onMouseEnter={() => setShowVolumeControl(true)}
-          onMouseLeave={() => setShowVolumeControl(false)}
-        >
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"

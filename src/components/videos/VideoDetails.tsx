@@ -16,59 +16,56 @@ export function VideoDetails({ title, createdAt, prompt }: VideoDetailsProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 pr-4">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold">{title}</h2>
-            <p className="text-sm text-muted-foreground">
-              {format(new Date(createdAt), "MMMM d, yyyy 'at' h:mm a")}
-            </p>
-          </div>
-
-          {prompt && (
-            <div>
-              <h3 className="text-lg font-medium mb-2">Prompt</h3>
-              <p className="text-sm text-muted-foreground">{prompt}</p>
-            </div>
-          )}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">
+            {format(new Date(createdAt), "MMMM d, yyyy 'at' h:mm a")}
+          </p>
         </div>
-      </ScrollArea>
 
-      <div className="border-t pt-4 mt-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
+        {prompt && (
+          <div>
+            <h3 className="text-sm font-medium mb-1">Prompt</h3>
+            <p className="text-sm text-muted-foreground">{prompt}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-auto pt-4 border-t">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5"
               onClick={() => setIsLiked(!isLiked)}
             >
               <Heart
                 className={cn(
-                  "h-5 w-5",
+                  "h-4 w-4",
                   isLiked && "fill-current text-red-500"
                 )}
               />
-              <span>124 likes</span>
+              <span className="text-sm">124</span>
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5"
             >
-              <Share className="h-5 w-5" />
-              Share
+              <Share className="h-4 w-4" />
             </Button>
           </div>
 
           <Button
             variant="default"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-1.5"
           >
             <Copy className="h-4 w-4" />
-            Clone & Try
+            Clone
           </Button>
         </div>
       </div>
