@@ -50,7 +50,17 @@ export const StepIndicator = ({
 
   return (
     <div className="w-full mb-8">
-      <div className="flex justify-between">
+      <div className="flex justify-between relative">
+        {/* Progress Line */}
+        <div className="absolute top-5 left-0 w-full h-[2px] bg-muted">
+          <div 
+            className="h-full bg-purple-600 transition-all duration-300"
+            style={{ 
+              width: `${(Math.max(...completedSteps) / steps.length) * 100}%`
+            }}
+          />
+        </div>
+
         {steps.map((step, index) => {
           const isCompleted = completedSteps.includes(step.number);
           const isActive = currentStep === step.number;
@@ -60,7 +70,7 @@ export const StepIndicator = ({
           return (
             <div
               key={step.number}
-              className="flex flex-col items-center space-y-2 relative"
+              className="flex flex-col items-center space-y-2 relative z-10"
             >
               <div
                 className={cn(
@@ -69,30 +79,20 @@ export const StepIndicator = ({
                     ? "bg-purple-100 text-purple-600" 
                     : isActive 
                       ? "bg-purple-600 text-white"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-background border-2 border-muted text-muted-foreground"
                 )}
               >
                 {isLoading ? step.loadingIcon : 
-                 isCompleted ? <Check className="w-5 h-5 text-purple-600" /> : 
+                 isCompleted ? <Check className="w-5 h-5" /> : 
                  step.icon}
               </div>
               <span className={cn(
-                "text-sm font-medium",
+                "text-sm font-medium whitespace-nowrap",
                 isCompleted && "text-purple-600",
                 isActive && "text-purple-600"
               )}>
                 {step.label}
               </span>
-              {index < steps.length - 1 && (
-                <div
-                  className={cn(
-                    "absolute top-5 left-[40px] w-[calc(100%-20px)] h-[2px] transition-all duration-300",
-                    isCompleted || (isActive && completedSteps.includes(index + 1))
-                      ? "bg-purple-500"
-                      : "bg-muted"
-                  )}
-                />
-              )}
             </div>
           );
         })}

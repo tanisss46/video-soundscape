@@ -86,6 +86,8 @@ export function ActivityPanel() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'analyzing':
+        return <Badge className="bg-[#FFA500]">Analyzing</Badge>;
       case 'processing':
         return <Badge className="bg-[#FFA500]">Processing</Badge>;
       case 'completed':
@@ -144,15 +146,23 @@ export function ActivityPanel() {
                             <video
                               src={video.video_url}
                               className="w-full h-full object-cover"
+                              muted
+                              playsInline
+                              autoPlay
+                              loop
                             />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <span className="text-sm font-medium truncate">
-                              {video.status === 'completed' 
-                                ? "Processing complete"
-                                : "Processing video..."}
+                              {video.status === 'analyzing' 
+                                ? "Analyzing video..."
+                                : video.status === 'processing'
+                                ? "Generating sound effect..."
+                                : video.status === 'completed'
+                                ? "Sound effect added"
+                                : "Processing complete"}
                             </span>
                             {getStatusBadge(video.status)}
                           </div>
