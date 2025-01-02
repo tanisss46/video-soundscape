@@ -52,6 +52,9 @@ export const VideoUpload = ({
 
     setIsAnalyzing(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const timestamp = Date.now();
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `temp_${timestamp}.${fileExt}`;
@@ -62,7 +65,8 @@ export const VideoUpload = ({
         .insert({
           prompt: 'Analyzing video content...',
           status: 'analyzing',
-          video_url: videoUrl
+          video_url: videoUrl,
+          user_id: user.id  // Set the user_id here
         })
         .select()
         .single();
@@ -130,6 +134,9 @@ export const VideoUpload = ({
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       // Create a generation record for processing
       const { data: generationData, error: generationError } = await supabase
         .from('user_generations')
@@ -137,7 +144,8 @@ export const VideoUpload = ({
           prompt: prompt,
           status: 'processing',
           video_url: videoUrl,
-          duration: advancedSettings.duration
+          duration: advancedSettings.duration,
+          user_id: user.id  // Set the user_id here
         })
         .select()
         .single();
