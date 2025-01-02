@@ -1,5 +1,4 @@
-import { Activity, Bell, ChevronDown, Info, X } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Activity, Bell, ChevronDown, Info, Loader, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
@@ -27,6 +26,25 @@ export function ActivityPanel() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Fetch existing processing videos on mount
+    const fetchProcessingVideos = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('user_generations')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['analyzing', 'processing'])
+        .order('id', { ascending: false });
+
+      if (data) {
+        setProcessingVideos(data);
+      }
+    };
+
+    fetchProcessingVideos();
+
     const channel = supabase
       .channel('user_generations_changes')
       .on(
@@ -38,7 +56,7 @@ export function ActivityPanel() {
         },
         (payload) => {
           if (payload.new && payload.eventType === 'INSERT') {
-            setProcessingVideos(prev => [...prev, payload.new as ProcessingVideo]);
+            setProcessingVideos(prev => [payload.new as ProcessingVideo, ...prev]);
             toast({
               title: "Processing Started",
               description: "Processing your video... Please wait.",
@@ -87,9 +105,19 @@ export function ActivityPanel() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'analyzing':
-        return <Badge className="bg-[#FFA500]">Analyzing</Badge>;
+        return (
+          <Badge className="bg-[#FFA500] flex items-center gap-1">
+            <Loader className="h-3 w-3 animate-spin" />
+            Analyzing
+          </Badge>
+        );
       case 'processing':
-        return <Badge className="bg-[#FFA500]">Processing</Badge>;
+        return (
+          <Badge className="bg-[#FFA500] flex items-center gap-1">
+            <Loader className="h-3 w-3 animate-spin" />
+            Processing
+          </Badge>
+        );
       case 'completed':
         return <Badge className="bg-[#28A745]">Completed</Badge>;
       case 'downloaded':
@@ -142,7 +170,7 @@ export function ActivityPanel() {
                     <div className="p-3 rounded-lg border bg-card">
                       <div className="flex items-start justify-between gap-2">
                         {video.video_url && (
-                          <div className="w-16 h-16 rounded overflow-hidden">
+                          <div className="w-16 h-16 rounded overflow-hidden bg-muted">
                             <video
                               src={video.video_url}
                               className="w-full h-full object-cover"
@@ -156,13 +184,7 @@ export function ActivityPanel() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <span className="text-sm font-medium truncate">
-                              {video.status === 'analyzing' 
-                                ? "Analyzing video..."
-                                : video.status === 'processing'
-                                ? "Generating sound effect..."
-                                : video.status === 'completed'
-                                ? "Sound effect added"
-                                : "Processing complete"}
+                              Process #{video.id}
                             </span>
                             {getStatusBadge(video.status)}
                           </div>
