@@ -6,13 +6,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ActivityBadge } from "./ActivityBadge";
 import { Button } from "@/components/ui/button";
+import { ActivityBadge } from "./ActivityBadge";
 
 interface ActivityEntryProps {
   id: number;

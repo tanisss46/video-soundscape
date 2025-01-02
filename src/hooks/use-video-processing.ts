@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { AdvancedSettingsValues } from "@/types/video";
 
 export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -39,7 +40,7 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
     }
   };
 
-  const processVideo = async (file: File, prompt: string, advancedSettings: any) => {
+  const processVideo = async (file: File, prompt: string, advancedSettings: AdvancedSettingsValues) => {
     try {
       setIsProcessing(true);
       const videoUrl = await uploadVideo(file);
