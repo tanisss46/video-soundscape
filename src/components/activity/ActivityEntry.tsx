@@ -32,11 +32,13 @@ export const ActivityEntry = ({ id, prompt, status, video_url, onRemove }: Activ
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <span className="text-sm font-medium truncate">
-              {status === 'completed' 
-                ? "Processing complete"
-                : status === 'analyzing'
+              Process #{id} - {status === 'analyzing' 
                 ? "Analyzing video..."
-                : "Generating sound effect..."}
+                : status === 'processing'
+                ? "Generating sound effect..."
+                : status === 'completed'
+                ? "Sound effect added"
+                : "Processing complete"}
             </span>
             <ActivityBadge status={status} />
           </div>
