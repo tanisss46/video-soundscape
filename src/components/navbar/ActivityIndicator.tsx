@@ -65,8 +65,8 @@ export const ActivityIndicator = () => {
           .from('user_generations')
           .select('*')
           .eq('user_id', currentUser.user.id)
-          .in('status', ['analyzing', 'processing', 'completed'])
-          .order('id', { ascending: false });
+          .order('id', { ascending: false })
+          .limit(10);
         
         if (data) {
           setProcessingVideos(data);
@@ -87,25 +87,15 @@ export const ActivityIndicator = () => {
         },
         (payload) => {
           if (payload.new && payload.eventType === 'INSERT') {
-            setProcessingVideos(prev => [...prev, payload.new as ProcessingVideo]);
+            setProcessingVideos(prev => [payload.new as ProcessingVideo, ...prev].slice(0, 10));
           } else if (payload.new && payload.eventType === 'UPDATE') {
             const updatedVideo = payload.new as ProcessingVideo;
             setProcessingVideos(prev => 
               prev.map(video => 
                 video.id === updatedVideo.id ? updatedVideo : video
-              )
+              ).slice(0, 10)
             );
             
-            // Only remove completed items after 5 seconds
-            if (updatedVideo.status === 'completed' || updatedVideo.status === 'downloaded') {
-              setTimeout(() => {
-                setProcessingVideos(prev => 
-                  prev.filter(v => v.id !== updatedVideo.id)
-                );
-              }, 5000);
-            }
-
-            // Show toast for completed generations
             if (updatedVideo.status === 'completed') {
               toast({
                 title: "Success",
@@ -140,10 +130,10 @@ export const ActivityIndicator = () => {
       </HoverCardTrigger>
       <HoverCardContent align="end" className="w-96">
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Active Processes</h4>
+          <h4 className="text-sm font-semibold">Recent Activities</h4>
           <ScrollArea className="h-[300px] pr-4">
             {processingVideos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active processes</p>
+              <p className="text-sm text-muted-foreground">No recent activities</p>
             ) : (
               <div className="space-y-2">
                 {processingVideos.map((video) => (
@@ -152,7 +142,7 @@ export const ActivityIndicator = () => {
                     className="text-sm p-2 rounded-lg border bg-card flex items-start gap-3"
                   >
                     {video.video_url && (
-                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
+                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0 bg-muted">
                         <video 
                           src={video.video_url} 
                           className="w-full h-full object-cover"
