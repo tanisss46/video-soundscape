@@ -8,13 +8,50 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface ProcessingVideo {
   id: number;
   prompt: string;
   status: string;
   error_message?: string;
+  video_url?: string;
 }
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'analyzing':
+      return <Badge variant="secondary">Analyzing</Badge>;
+    case 'processing':
+      return <Badge variant="secondary">Generating</Badge>;
+    case 'completed':
+      return <Badge variant="success">Completed</Badge>;
+    case 'downloaded':
+      return <Badge variant="primary">Downloaded</Badge>;
+    case 'error':
+      return <Badge variant="destructive">Error</Badge>;
+    default:
+      return <Badge variant="secondary">{status}</Badge>;
+  }
+};
+
+const getStatusMessage = (status: string) => {
+  switch (status) {
+    case 'analyzing':
+      return 'Analyzing video...';
+    case 'processing':
+      return 'Generating sound effect...';
+    case 'completed':
+      return 'Sound effect added';
+    case 'downloaded':
+      return 'Downloaded';
+    case 'error':
+      return 'Error occurred';
+    default:
+      return status;
+  }
+};
 
 export const ActivityIndicator = () => {
   const [processingVideos, setProcessingVideos] = useState<ProcessingVideo[]>([]);
@@ -51,29 +88,24 @@ export const ActivityIndicator = () => {
         (payload) => {
           if (payload.new && payload.eventType === 'INSERT') {
             setProcessingVideos(prev => [...prev, payload.new as ProcessingVideo]);
-            toast({
-              title: "Processing Started",
-              description: "Your sound effect is being generated...",
-            });
           } else if (payload.new && payload.eventType === 'UPDATE') {
             const updatedVideo = payload.new as ProcessingVideo;
             setProcessingVideos(prev => 
               prev.map(video => 
                 video.id === updatedVideo.id ? updatedVideo : video
-              ).filter(video => video.status !== 'completed' && video.status !== 'error')
+              ).filter(video => 
+                video.status !== 'completed' && 
+                video.status !== 'error' && 
+                video.status !== 'downloaded'
+              )
             );
             
             if (updatedVideo.status === 'completed') {
-              toast({
-                title: "Sound Effect Ready!",
-                description: "Your video has been processed successfully.",
-              });
-            } else if (updatedVideo.status === 'error') {
-              toast({
-                title: "Processing Error",
-                description: updatedVideo.error_message || "An error occurred while processing your video.",
-                variant: "destructive",
-              });
+              setTimeout(() => {
+                setProcessingVideos(prev => 
+                  prev.filter(v => v.id !== updatedVideo.id)
+                );
+              }, 5000);
             }
           }
         }
@@ -101,28 +133,49 @@ export const ActivityIndicator = () => {
           )}
         </Button>
       </HoverCardTrigger>
-      <HoverCardContent align="end" className="w-80">
+      <HoverCardContent align="end" className="w-96">
         <div className="space-y-2">
           <h4 className="text-sm font-semibold">Active Processes</h4>
-          {processingVideos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active processes</p>
-          ) : (
-            processingVideos.map((video) => (
-              <div
-                key={video.id}
-                className="text-sm p-2 rounded-lg border bg-card"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-muted-foreground">
-                    {video.prompt || "Generating sound effect..."}
-                  </p>
-                  <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap bg-primary/20 text-primary">
-                    {video.status === 'processing' ? 'Generating' : video.status}
-                  </span>
-                </div>
+          <ScrollArea className="h-[300px] pr-4">
+            {processingVideos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active processes</p>
+            ) : (
+              <div className="space-y-2">
+                {processingVideos.map((video) => (
+                  <div
+                    key={video.id}
+                    className="text-sm p-2 rounded-lg border bg-card flex items-start gap-3"
+                  >
+                    {video.video_url && (
+                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
+                        <video 
+                          src={video.video_url} 
+                          className="w-full h-full object-cover"
+                          muted
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="text-xs text-muted-foreground">
+                          Process #{video.id}
+                        </p>
+                        {getStatusBadge(video.status)}
+                      </div>
+                      <p className="text-sm truncate">
+                        {getStatusMessage(video.status)}
+                      </p>
+                      {video.prompt && (
+                        <p className="text-xs text-muted-foreground truncate mt-1">
+                          {video.prompt}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))
-          )}
+            )}
+          </ScrollArea>
         </div>
       </HoverCardContent>
     </HoverCard>
