@@ -29,15 +29,6 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
 
         if (status.status === "succeeded") {
           clearInterval(pollInterval);
-          
-          await supabase
-            .from("user_generations")
-            .update({
-              audio_url: status.output,
-              status: "completed",
-            })
-            .eq("id", generation.id);
-
           queryClient.invalidateQueries({ queryKey: ['videos'] });
 
           if (onAfterProcess) {

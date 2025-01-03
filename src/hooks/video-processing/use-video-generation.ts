@@ -22,6 +22,40 @@ export const useVideoGeneration = () => {
     return video;
   };
 
+  const storeAudioFile = async (audioUrl: string, userId: string) => {
+    try {
+      // Download the audio file from the external URL
+      const response = await fetch(audioUrl);
+      if (!response.ok) throw new Error('Failed to fetch audio file');
+      const audioBlob = await response.blob();
+
+      // Generate a unique filename
+      const timestamp = Date.now();
+      const filename = `${userId}/${timestamp}.mp3`;
+
+      // Upload to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('audio-files')
+        .upload(filename, audioBlob, {
+          cacheControl: '3600',
+          contentType: 'audio/mpeg',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('audio-files')
+        .getPublicUrl(filename);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error storing audio file:', error);
+      throw error;
+    }
+  };
+
   const createGenerationRecord = async (videoId: string, prompt: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
@@ -47,6 +81,9 @@ export const useVideoGeneration = () => {
     advancedSettings: AdvancedSettingsValues,
     generationId: number
   ) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+
     const apiParams = {
       video_url: videoUrl,
       seed: advancedSettings.seed,
@@ -67,6 +104,23 @@ export const useVideoGeneration = () => {
     });
 
     if (predictionError) throw predictionError;
+
+    // If the prediction includes an audio URL, store it in Supabase
+    if (prediction.output) {
+      const storedAudioUrl = await storeAudioFile(prediction.output, user.id);
+      
+      // Update the generation record with the stored audio URL
+      const { error: updateError } = await supabase
+        .from("user_generations")
+        .update({
+          audio_url: storedAudioUrl,
+          status: "completed",
+        })
+        .eq("id", generationId);
+
+      if (updateError) throw updateError;
+    }
+
     return prediction;
   };
 
