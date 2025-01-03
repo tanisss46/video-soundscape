@@ -18,13 +18,11 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize audio if URL exists
     if (audioUrl) {
       audioRef.current = new Audio(audioUrl);
       audioRef.current.load();
     }
 
-    // Cleanup
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -84,14 +82,14 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
 
   return (
     <div 
-      className="relative w-full h-full bg-black"
+      className="relative w-full h-full bg-black group"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
       <video
         ref={videoRef}
         src={videoUrl}
-        className="w-full h-full object-contain aspect-video"
+        className="w-full h-full object-contain"
         loop
         muted={!audioUrl}
         playsInline
@@ -99,8 +97,8 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
       
       <div 
         className={cn(
-          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 transition-opacity duration-200",
-          showControls ? "opacity-100" : "opacity-0"
+          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 p-2 rounded-lg bg-black/50 backdrop-blur-sm transition-all duration-200",
+          showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
       >
         <Button
@@ -110,9 +108,9 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
           onClick={handlePlayPause}
         >
           {isPlaying ? (
-            <Pause className="h-6 w-6" />
+            <Pause className="h-5 w-5" />
           ) : (
-            <Play className="h-6 w-6" />
+            <Play className="h-5 w-5" />
           )}
         </Button>
 
@@ -125,9 +123,9 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
               onClick={() => setVolume(volume === 0 ? 1 : 0)}
             >
               {volume === 0 ? (
-                <VolumeX className="h-6 w-6" />
+                <VolumeX className="h-5 w-5" />
               ) : (
-                <Volume2 className="h-6 w-6" />
+                <Volume2 className="h-5 w-5" />
               )}
             </Button>
             <Slider
