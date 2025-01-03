@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, Trash2 } from "lucide-react";
 import { Video } from "@/types/video";
-import { useState, useRef } from "react";
 import { VideoDetailDialog } from "./VideoDetailDialog";
+import { VideoControls } from "./VideoControls";
+import { VideoPreview } from "./VideoPreview";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,43 +33,8 @@ export const VideoCard = ({
   onDownload,
   onDelete,
 }: VideoCardProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (video.audio_url) {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(video.audio_url);
-      }
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => {
-        console.error("Audio playback error:", error);
-      });
-    }
-    if (videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.error("Video playback error:", error);
-      });
-    }
-    onMouseEnter();
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-    onMouseLeave();
-  };
 
   const handleDownloadClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -86,55 +51,33 @@ export const VideoCard = ({
   const confirmDelete = () => {
     onDelete();
     setShowDeleteDialog(false);
-    toast.success("Video deleted successfully", {
-      className: "bg-green-500 text-white border-green-600",
-    });
+    toast.success("Video deleted successfully");
   };
 
   const handleCardClick = () => {
     setShowDetail(true);
-    handleMouseLeave();
+    onMouseLeave();
   };
 
   return (
     <>
       <Card 
         className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50 cursor-pointer"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         onClick={handleCardClick}
       >
         <CardContent className="p-0 relative">
-          <video 
-            ref={videoRef}
-            src={video.video_url} 
-            className="w-full aspect-video object-cover"
-            loop
-            muted
-            playsInline
+          <VideoPreview
+            videoUrl={video.video_url}
+            audioUrl={video.audio_url}
+            isPlaying={isPlaying}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/20"
-                onClick={handleDownloadClick}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/20"
-                onClick={handleDeleteClick}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <VideoControls
+            onDownload={handleDownloadClick}
+            onDelete={handleDeleteClick}
+          />
         </CardContent>
       </Card>
 
