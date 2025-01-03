@@ -20,7 +20,6 @@ export function ActivityPanel() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch existing processing videos on mount
     const fetchProcessingVideos = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -29,7 +28,7 @@ export function ActivityPanel() {
         .from('user_generations')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['analyzing', 'processing', 'completed'])
+        .in('status', ['analyzing', 'analyzed', 'processing'])
         .order('id', { ascending: false })
         .limit(10);
 
@@ -50,36 +49,35 @@ export function ActivityPanel() {
           table: 'user_generations'
         },
         (payload) => {
-          if (payload.new && payload.eventType === 'INSERT') {
-            setProcessingVideos(prev => [payload.new as ProcessingVideo, ...prev]);
-          } else if (payload.new && payload.eventType === 'UPDATE') {
-            const updatedVideo = payload.new as ProcessingVideo;
-            setProcessingVideos(prev => 
-              prev.map(video => 
-                video.id === updatedVideo.id ? updatedVideo : video
-              )
-            );
+          if (payload.new) {
+            const newGeneration = payload.new as ProcessingVideo;
             
-            if (updatedVideo.status === 'completed') {
-              // Only show completion toast
-              toast({
-                title: "Process Complete",
-                description: `Process #${updatedVideo.id} has been completed.`,
-                variant: "success"
-              });
+            if (payload.eventType === 'INSERT') {
+              setProcessingVideos(prev => [newGeneration, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+              setProcessingVideos(prev => 
+                prev.map(video => 
+                  video.id === newGeneration.id ? newGeneration : video
+                ).filter(video => 
+                  video.id === newGeneration.id ? 
+                    newGeneration.status !== 'completed' : 
+                    video.status !== 'completed'
+                )
+              );
               
-              // Remove completed video after 30 seconds
-              setTimeout(() => {
-                setProcessingVideos(prev => 
-                  prev.filter(video => video.id !== updatedVideo.id)
-                );
-              }, 30000);
-            } else if (updatedVideo.status === 'error') {
-              toast({
-                title: "Processing Error",
-                description: updatedVideo.error_message || "An error occurred while processing your video.",
-                variant: "destructive",
-              });
+              if (newGeneration.status === 'completed') {
+                toast({
+                  title: "Process Complete",
+                  description: `Sound effect generated successfully for Process #${newGeneration.id}`,
+                  variant: "success"
+                });
+              } else if (newGeneration.status === 'error') {
+                toast({
+                  title: "Processing Error",
+                  description: newGeneration.error_message || "An error occurred while processing your video.",
+                  variant: "destructive",
+                });
+              }
             }
           }
         }

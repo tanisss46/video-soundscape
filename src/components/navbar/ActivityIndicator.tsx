@@ -1,7 +1,6 @@
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import {
   HoverCard,
   HoverCardContent,
@@ -24,7 +23,7 @@ const getStatusBadge = (status: string) => {
     case 'analyzing':
       return <Badge variant="secondary">Analyzing</Badge>;
     case 'processing':
-      return <Badge variant="secondary">Generating</Badge>;
+      return <Badge variant="secondary">Generating Sound</Badge>;
     case 'completed':
       return <Badge variant="success">Completed</Badge>;
     case 'downloaded':
@@ -40,12 +39,12 @@ const getStatusMessage = (status: string) => {
   switch (status) {
     case 'analyzing':
       return 'Analyzing video content...';
+    case 'analyzed':
+      return 'Analysis complete, ready to generate';
     case 'processing':
       return 'Generating sound effect...';
     case 'completed':
       return 'Sound effect generated successfully';
-    case 'downloaded':
-      return 'Video downloaded';
     case 'error':
       return 'Error occurred';
     default:
@@ -55,7 +54,6 @@ const getStatusMessage = (status: string) => {
 
 export const ActivityIndicator = () => {
   const [processingVideos, setProcessingVideos] = useState<ProcessingVideo[]>([]);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProcessingVideos = async () => {
@@ -65,6 +63,7 @@ export const ActivityIndicator = () => {
           .from('user_generations')
           .select('*')
           .eq('user_id', currentUser.user.id)
+          .in('status', ['analyzing', 'analyzed', 'processing'])
           .order('id', { ascending: false })
           .limit(10);
         
@@ -86,21 +85,21 @@ export const ActivityIndicator = () => {
           table: 'user_generations'
         },
         (payload) => {
-          if (payload.new && payload.eventType === 'INSERT') {
-            setProcessingVideos(prev => [payload.new as ProcessingVideo, ...prev].slice(0, 10));
-          } else if (payload.new && payload.eventType === 'UPDATE') {
-            const updatedVideo = payload.new as ProcessingVideo;
-            setProcessingVideos(prev => 
-              prev.map(video => 
-                video.id === updatedVideo.id ? updatedVideo : video
-              ).slice(0, 10)
-            );
+          if (payload.new) {
+            const newGeneration = payload.new as ProcessingVideo;
             
-            if (updatedVideo.status === 'completed') {
-              toast({
-                title: "Success",
-                description: "Sound effect generated successfully!",
-              });
+            if (payload.eventType === 'INSERT') {
+              setProcessingVideos(prev => [newGeneration, ...prev].slice(0, 10));
+            } else if (payload.eventType === 'UPDATE') {
+              setProcessingVideos(prev => 
+                prev.map(video => 
+                  video.id === newGeneration.id ? newGeneration : video
+                ).filter(video => 
+                  video.id === newGeneration.id ? 
+                    newGeneration.status !== 'completed' : 
+                    video.status !== 'completed'
+                ).slice(0, 10)
+              );
             }
           }
         }
@@ -110,7 +109,7 @@ export const ActivityIndicator = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [toast]);
+  }, []);
 
   return (
     <HoverCard>
@@ -133,7 +132,7 @@ export const ActivityIndicator = () => {
           <h4 className="text-sm font-semibold">Recent Activities</h4>
           <ScrollArea className="h-[300px] pr-4">
             {processingVideos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent activities</p>
+              <p className="text-sm text-muted-foreground">No active processes</p>
             ) : (
               <div className="space-y-2">
                 {processingVideos.map((video) => (
