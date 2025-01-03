@@ -1,9 +1,10 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Heart, Share2, Copy } from "lucide-react";
+import { X, Heart, Share2, RefreshCw } from "lucide-react";
 import { VideoPlayer } from "./VideoPlayer";
 import { VideoDetails } from "./VideoDetails";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface VideoDetailDialogProps {
   video: {
@@ -18,9 +19,18 @@ interface VideoDetailDialogProps {
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRegenerateSoundEffect?: () => void;
 }
 
-export function VideoDetailDialog({ video, open, onOpenChange }: VideoDetailDialogProps) {
+export function VideoDetailDialog({ 
+  video, 
+  open, 
+  onOpenChange,
+  onRegenerateSoundEffect 
+}: VideoDetailDialogProps) {
+  const location = useLocation();
+  const isMyVideos = location.pathname === "/my-videos";
+  
   if (!video) return null;
 
   const audioUrl = video.user_generations?.[0]?.audio_url;
@@ -34,7 +44,7 @@ export function VideoDetailDialog({ video, open, onOpenChange }: VideoDetailDial
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent 
         className={cn(
-          "max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] h-[90vh] p-0 gap-0 bg-[#1B1B1B] text-[#E0E0E0]",
+          "max-w-[70vw] lg:max-w-[1200px] h-[80vh] p-0 gap-0 bg-[#1B1B1B] text-[#E0E0E0]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
           "data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2"
@@ -66,6 +76,8 @@ export function VideoDetailDialog({ video, open, onOpenChange }: VideoDetailDial
                 title={video.title}
                 createdAt={video.created_at}
                 prompt={prompt}
+                isMyVideos={isMyVideos}
+                onRegenerateSoundEffect={onRegenerateSoundEffect}
               />
             </div>
           </div>

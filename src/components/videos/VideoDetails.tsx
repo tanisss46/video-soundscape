@@ -2,15 +2,23 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Heart, Share2, Copy } from "lucide-react";
+import { Heart, Share2, RefreshCw } from "lucide-react";
 
 interface VideoDetailsProps {
   title: string;
   createdAt: string;
   prompt?: string;
+  isMyVideos?: boolean;
+  onRegenerateSoundEffect?: () => void;
 }
 
-export function VideoDetails({ title, createdAt, prompt }: VideoDetailsProps) {
+export function VideoDetails({ 
+  title, 
+  createdAt, 
+  prompt,
+  isMyVideos,
+  onRegenerateSoundEffect 
+}: VideoDetailsProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
 
@@ -52,7 +60,7 @@ export function VideoDetails({ title, createdAt, prompt }: VideoDetailsProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+      <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/10">
         <Button
           variant="ghost"
           size="sm"
@@ -76,14 +84,17 @@ export function VideoDetails({ title, createdAt, prompt }: VideoDetailsProps) {
           <span className="text-sm">Share</span>
         </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 hover:bg-white/5 ml-auto"
-        >
-          <Copy className="h-4 w-4" />
-          <span className="text-sm">Clone & Try</span>
-        </Button>
+        {isMyVideos && onRegenerateSoundEffect && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2 hover:bg-white/5 ml-auto"
+            onClick={onRegenerateSoundEffect}
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span className="text-sm">Re-generate Sound</span>
+          </Button>
+        )}
       </div>
     </div>
   );

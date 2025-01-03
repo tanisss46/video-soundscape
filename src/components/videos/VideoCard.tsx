@@ -23,6 +23,7 @@ interface VideoCardProps {
   onMouseLeave: () => void;
   onDownload: () => void;
   onDelete: () => void;
+  onRegenerateSoundEffect?: () => void;
 }
 
 export const VideoCard = ({
@@ -32,6 +33,7 @@ export const VideoCard = ({
   onMouseLeave,
   onDownload,
   onDelete,
+  onRegenerateSoundEffect,
 }: VideoCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -85,6 +87,7 @@ export const VideoCard = ({
         video={video}
         open={showDetail}
         onOpenChange={setShowDetail}
+        onRegenerateSoundEffect={onRegenerateSoundEffect}
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
