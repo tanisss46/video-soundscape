@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Trash2 } from "lucide-react";
 import { Video } from "@/types/video";
 import { useState, useRef } from "react";
+import { VideoDetailDialog } from "./VideoDetailDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ export const VideoCard = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleMouseEnter = () => {
@@ -89,18 +91,24 @@ export const VideoCard = ({
     });
   };
 
+  const handleCardClick = () => {
+    setShowDetail(true);
+    handleMouseLeave();
+  };
+
   return (
     <>
       <Card 
-        className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50"
+        className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-accent/50 border-accent hover:border-primary/50 cursor-pointer"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onClick={handleCardClick}
       >
         <CardContent className="p-0 relative">
           <video 
             ref={videoRef}
             src={video.video_url} 
-            className="w-full aspect-video object-cover cursor-pointer"
+            className="w-full aspect-video object-cover"
             loop
             muted
             playsInline
@@ -129,6 +137,12 @@ export const VideoCard = ({
           </div>
         </CardContent>
       </Card>
+
+      <VideoDetailDialog
+        video={video}
+        open={showDetail}
+        onOpenChange={setShowDetail}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
