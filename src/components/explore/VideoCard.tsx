@@ -24,16 +24,23 @@ export const VideoCard = ({ video }: VideoCardProps) => {
     if (audioUrl) {
       if (!audioRef.current) {
         audioRef.current = new Audio(audioUrl);
+        audioRef.current.load(); // Explicitly load the audio
       }
       audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => {
-        console.error("Audio playback error:", error);
-      });
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Audio playback error:", error);
+        });
+      }
     }
     if (videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.error("Video playback error:", error);
-      });
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Video playback error:", error);
+        });
+      }
     }
   };
 

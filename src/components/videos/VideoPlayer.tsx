@@ -18,24 +18,42 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Initialize audio if URL is provided
+    if (audioUrl) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.load(); // Explicitly load the audio
+    }
+
+    // Cleanup
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [audioUrl]);
+
+  useEffect(() => {
     if (autoPlay) {
       handlePlay();
     }
-  }, []);
+  }, [autoPlay]);
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     if (!videoRef.current) return;
     
-    videoRef.current.play();
-    if (audioUrl && !audioRef.current) {
-      audioRef.current = new Audio(audioUrl);
+    try {
+      await videoRef.current.play();
+      if (audioRef.current && audioUrl) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.volume = volume;
+        await audioRef.current.play();
+      }
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Playback error:", error);
+      setIsPlaying(false);
     }
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.volume = volume;
-      audioRef.current.play();
-    }
-    setIsPlaying(true);
   };
 
   const handlePause = () => {
@@ -98,27 +116,29 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
           )}
         </Button>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
-            onClick={() => setVolume(volume === 0 ? 1 : 0)}
-          >
-            {volume === 0 ? (
-              <VolumeX className="h-6 w-6" />
-            ) : (
-              <Volume2 className="h-6 w-6" />
-            )}
-          </Button>
-          <Slider
-            value={[volume]}
-            max={1}
-            step={0.1}
-            className="w-24"
-            onValueChange={handleVolumeChange}
-          />
-        </div>
+        {audioUrl && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={() => setVolume(volume === 0 ? 1 : 0)}
+            >
+              {volume === 0 ? (
+                <VolumeX className="h-6 w-6" />
+              ) : (
+                <Volume2 className="h-6 w-6" />
+              )}
+            </Button>
+            <Slider
+              value={[volume]}
+              max={1}
+              step={0.1}
+              className="w-24"
+              onValueChange={handleVolumeChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
