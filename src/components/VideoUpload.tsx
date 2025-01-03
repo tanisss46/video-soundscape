@@ -59,21 +59,32 @@ export const VideoUpload = ({
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `temp_${timestamp}.${fileExt}`;
 
-      // Create a generation record for analysis
-      const { data: generationData, error: generationError } = await supabase
-        .from('user_generations')
-        .insert({
-          prompt: 'Analyzing video content...',
-          status: 'analyzing',
-          video_url: videoUrl,
-          user_id: user.id  // Set the user_id here
-        })
-        .select()
-        .single();
+      // Create or update generation record
+      let generationId = currentGenerationId;
+      if (!generationId) {
+        const { data: generationData, error: generationError } = await supabase
+          .from('user_generations')
+          .insert({
+            prompt: 'Analyzing video content...',
+            status: 'analyzing',
+            video_url: videoUrl,
+            user_id: user.id
+          })
+          .select()
+          .single();
 
-      if (generationError) throw generationError;
-      
-      setCurrentGenerationId(generationData.id);
+        if (generationError) throw generationError;
+        generationId = generationData.id;
+        setCurrentGenerationId(generationId);
+      } else {
+        await supabase
+          .from('user_generations')
+          .update({
+            status: 'analyzing',
+            prompt: 'Analyzing video content...'
+          })
+          .eq('id', generationId);
+      }
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
@@ -96,14 +107,14 @@ export const VideoUpload = ({
 
       if (data.output) {
         setAnalysisResult(data.output);
-        // Update the generation record to completed
+        // Update the generation record
         await supabase
           .from('user_generations')
           .update({ 
-            status: 'completed',
+            status: 'analyzed',
             prompt: data.output
           })
-          .eq('id', generationData.id);
+          .eq('id', generationId);
 
         if (onAnalyzeComplete) {
           onAnalyzeComplete();
@@ -137,22 +148,17 @@ export const VideoUpload = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Create a generation record for processing
-      const { data: generationData, error: generationError } = await supabase
-        .from('user_generations')
-        .insert({
-          prompt: prompt,
-          status: 'processing',
-          video_url: videoUrl,
-          duration: advancedSettings.duration,
-          user_id: user.id  // Set the user_id here
-        })
-        .select()
-        .single();
-
-      if (generationError) throw generationError;
-      
-      setCurrentGenerationId(generationData.id);
+      // Update existing generation record
+      if (currentGenerationId) {
+        await supabase
+          .from('user_generations')
+          .update({
+            prompt: prompt,
+            status: 'processing',
+            duration: advancedSettings.duration
+          })
+          .eq('id', currentGenerationId);
+      }
 
       await processVideo(selectedFile, prompt, advancedSettings);
       resetUpload();

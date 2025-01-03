@@ -31,7 +31,7 @@ export function ActivityPanel() {
         .eq('user_id', user.id)
         .in('status', ['analyzing', 'processing', 'completed'])
         .order('id', { ascending: false })
-        .limit(10); // Limit to last 10 generations
+        .limit(10);
 
       if (data) {
         setProcessingVideos(data);
@@ -52,10 +52,6 @@ export function ActivityPanel() {
         (payload) => {
           if (payload.new && payload.eventType === 'INSERT') {
             setProcessingVideos(prev => [payload.new as ProcessingVideo, ...prev]);
-            toast({
-              title: "Processing Started",
-              description: "Processing your video... Please wait.",
-            });
           } else if (payload.new && payload.eventType === 'UPDATE') {
             const updatedVideo = payload.new as ProcessingVideo;
             setProcessingVideos(prev => 
@@ -65,17 +61,19 @@ export function ActivityPanel() {
             );
             
             if (updatedVideo.status === 'completed') {
+              // Only show completion toast
               toast({
-                title: "Video Ready",
-                description: "Your video is ready to download.",
+                title: "Process Complete",
+                description: `Process #${updatedVideo.id} has been completed.`,
                 variant: "success"
               });
+              
               // Remove completed video after 30 seconds
               setTimeout(() => {
                 setProcessingVideos(prev => 
                   prev.filter(video => video.id !== updatedVideo.id)
                 );
-              }, 30000); // Increased to 30 seconds to give more time to see completion
+              }, 30000);
             } else if (updatedVideo.status === 'error') {
               toast({
                 title: "Processing Error",
