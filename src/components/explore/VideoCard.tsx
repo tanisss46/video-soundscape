@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { VideoDetailDialog } from "../videos/VideoDetailDialog";
 
 interface VideoCardProps {
@@ -19,27 +19,37 @@ export const VideoCard = ({ video }: VideoCardProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
+  useEffect(() => {
+    // Initialize audio if URL exists
     if (audioUrl) {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(audioUrl);
-        audioRef.current.load(); // Explicitly load the audio
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.load();
+    }
+
+    // Cleanup
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
-      audioRef.current.currentTime = 0;
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Audio playback error:", error);
-        });
+    };
+  }, [audioUrl]);
+
+  const handleMouseEnter = async () => {
+    setIsHovered(true);
+    if (audioUrl && audioRef.current) {
+      try {
+        audioRef.current.currentTime = 0;
+        await audioRef.current.play();
+      } catch (error) {
+        console.error("Audio playback error:", error);
       }
     }
     if (videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Video playback error:", error);
-        });
+      try {
+        await videoRef.current.play();
+      } catch (error) {
+        console.error("Video playback error:", error);
       }
     }
   };

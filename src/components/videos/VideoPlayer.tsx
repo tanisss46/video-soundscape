@@ -18,10 +18,10 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize audio if URL is provided
+    // Initialize audio if URL exists
     if (audioUrl) {
       audioRef.current = new Audio(audioUrl);
-      audioRef.current.load(); // Explicitly load the audio
+      audioRef.current.load();
     }
 
     // Cleanup
@@ -45,7 +45,7 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
     try {
       await videoRef.current.play();
       if (audioRef.current && audioUrl) {
-        audioRef.current.currentTime = 0;
+        audioRef.current.currentTime = videoRef.current.currentTime;
         audioRef.current.volume = volume;
         await audioRef.current.play();
       }
@@ -93,7 +93,7 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
         src={videoUrl}
         className="w-full h-full object-contain aspect-video"
         loop
-        muted
+        muted={!audioUrl}
         playsInline
       />
       
