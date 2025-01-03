@@ -52,6 +52,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        web3: {
+          background: "#1B1B1B",
+          accent: "#8B5CF6",
+          accent2: "#00FFC2",
+          surface: "#262626",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -76,16 +82,41 @@ export default {
           "50%": { backgroundPosition: "100% 50%" },
           "100%": { backgroundPosition: "0% 50%" },
         },
+        "fade-up": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        glow: {
+          "0%, 100%": {
+            boxShadow: "0 0 15px rgba(139, 92, 246, 0.5)"
+          },
+          "50%": {
+            boxShadow: "0 0 25px rgba(139, 92, 246, 0.8)"
+          }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         float: "float 6s ease-in-out infinite",
         gradient: "gradient 15s ease infinite",
+        "fade-up": "fade-up 0.5s ease-out",
+        glow: "glow 2s ease-in-out infinite"
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "hero-pattern": "linear-gradient(to right bottom, rgba(15,15,28,0.12), rgba(147, 51, 234, 0.12))",
+        "web3-gradient": "linear-gradient(to bottom right, #262626, #1B1B1B)",
+      },
+      boxShadow: {
+        'neon': '0 0 15px rgba(139, 92, 246, 0.5)',
+        'neon-hover': '0 0 25px rgba(139, 92, 246, 0.8)',
       },
     },
   },

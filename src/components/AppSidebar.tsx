@@ -1,5 +1,5 @@
 import { Compass, Video, FolderOpen } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -29,8 +29,10 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
+  const location = useLocation();
+
   return (
-    <Sidebar className="w-64 border-r border-border/50 bg-[#0f111a]">
+    <Sidebar className="w-64 border-r border-web3-surface/50 bg-web3-background">
       <SidebarContent>
         <div className="p-4">
           <h1 className="text-2xl font-bold gradient-text">SoundAI</h1>
@@ -44,7 +46,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <Link 
                       to={item.url} 
-                      className="flex items-center gap-3 px-4 py-2 text-base text-muted-foreground hover:text-primary hover:bg-accent/50 rounded-lg transition-colors"
+                      className={`web3-nav-item ${location.pathname === item.url ? 'web3-nav-item-active' : ''}`}
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>

@@ -4,33 +4,33 @@
  
 @layer base {
   :root {
-    --background: 240 30% 8%;
-    --foreground: 213 31% 91%;
+    --background: 0 0% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 240 30% 8%;
-    --card-foreground: 213 31% 91%;
+    --card: 0 0% 11%;
+    --card-foreground: 210 40% 98%;
  
-    --popover: 240 30% 8%;
-    --popover-foreground: 213 31% 91%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 210 40% 98%;
  
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 265 84% 61%;
+    --primary-foreground: 210 40% 98%;
  
-    --secondary: 240 30% 8%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 210 40% 98%;
  
-    --muted: 240 30% 5%;
-    --muted-foreground: 215.4 16.3% 56.9%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
  
-    --accent: 240 30% 12%;
+    --accent: 265 84% 61%;
     --accent-foreground: 210 40% 98%;
  
-    --destructive: 0 63% 31%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
  
-    --border: 240 30% 12%;
-    --input: 240 30% 12%;
-    --ring: 213 31% 91%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 265 84% 61%;
  
     --radius: 0.5rem;
   }
@@ -41,14 +41,49 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-web3-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .web3-card {
+    @apply bg-web3-surface/50 border border-web3-surface hover:border-web3-accent/50 
+           transition-all duration-300 hover:scale-[1.02] hover:shadow-neon rounded-lg overflow-hidden;
+  }
+  
+  .web3-button {
+    @apply relative bg-web3-surface text-web3-accent border-2 border-web3-accent 
+           shadow-neon hover:shadow-neon-hover hover:bg-web3-surface/90 
+           hover:border-web3-accent2 hover:text-web3-accent2 
+           transition-all duration-300 rounded-lg;
+  }
+
+  .web3-nav-item {
+    @apply relative flex items-center gap-3 px-4 py-2 text-base text-muted-foreground 
+           hover:text-primary hover:bg-web3-surface/50 rounded-lg transition-colors
+           before:absolute before:left-0 before:w-1 before:h-full before:bg-web3-accent 
+           before:opacity-0 before:transition-opacity before:rounded-r-lg
+           hover:before:opacity-100;
+  }
+
+  .web3-nav-item-active {
+    @apply text-web3-accent bg-web3-surface/50 before:opacity-100 animate-glow;
   }
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 animate-gradient bg-300%;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-web3-accent to-web3-accent2 
+         animate-gradient bg-300%;
 }
 
 .bg-300\% {
   background-size: 300% 300%;
+}
+
+/* Add Inter font for modern look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html {
+  font-family: 'Inter', sans-serif;
 }
