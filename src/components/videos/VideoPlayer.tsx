@@ -16,7 +16,9 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
   const [showControls, setShowControls] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasAttemptedAutoPlay = useRef(false);
 
+  // Initialize audio
   useEffect(() => {
     if (audioUrl) {
       audioRef.current = new Audio(audioUrl);
@@ -31,19 +33,27 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
     };
   }, [audioUrl]);
 
+  // Handle autoPlay
   useEffect(() => {
-    if (autoPlay) {
+    if (autoPlay && !hasAttemptedAutoPlay.current && videoRef.current) {
+      hasAttemptedAutoPlay.current = true;
       handlePlay();
     }
-  }, [autoPlay]);
+  }, [autoPlay, videoRef.current]);
 
   // Monitor video events
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleVideoPlay = () => setIsPlaying(true);
-    const handleVideoPause = () => setIsPlaying(false);
+    const handleVideoPlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handleVideoPause = () => {
+      setIsPlaying(false);
+    };
+
     const handleVideoEnded = () => {
       setIsPlaying(false);
       if (video) {
@@ -69,13 +79,16 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
     if (!videoRef.current) return;
     
     try {
-      await videoRef.current.play();
-      if (audioRef.current && audioUrl) {
-        audioRef.current.currentTime = videoRef.current.currentTime;
-        audioRef.current.volume = volume;
-        await audioRef.current.play();
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        await playPromise;
+        setIsPlaying(true);
+        if (audioRef.current && audioUrl) {
+          audioRef.current.currentTime = videoRef.current.currentTime;
+          audioRef.current.volume = volume;
+          await audioRef.current.play();
+        }
       }
-      setIsPlaying(true);
     } catch (error) {
       console.error("Playback error:", error);
       setIsPlaying(false);
@@ -122,8 +135,6 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
           loop
           muted={!audioUrl}
           playsInline
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
         />
       </div>
       
