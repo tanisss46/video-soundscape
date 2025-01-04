@@ -20,13 +20,11 @@ export const VideoCard = ({ video }: VideoCardProps) => {
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
   useEffect(() => {
-    // Initialize audio if URL exists
     if (audioUrl) {
       audioRef.current = new Audio(audioUrl);
       audioRef.current.load();
     }
 
-    // Cleanup
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -74,7 +72,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
   return (
     <>
       <Card 
-        className="group overflow-hidden bg-accent/50 border-accent hover:border-primary/50 transition-all duration-300 cursor-pointer"
+        className="web3-card group overflow-hidden cursor-pointer"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
@@ -88,11 +86,14 @@ export const VideoCard = ({ video }: VideoCardProps) => {
             muted
             playsInline
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div 
+            className="absolute inset-0 bg-gradient-to-t from-web3-background/90 via-web3-background/20 to-transparent 
+                       opacity-0 group-hover:opacity-100 transition-all duration-300"
+          />
           
           {audioUrl && isHovered && (
             <div className="absolute top-2 right-2">
-              <span className="text-xs bg-black/60 text-white px-2 py-1 rounded-full">
+              <span className="text-xs bg-web3-surface/80 text-web3-accent px-2 py-1 rounded-full animate-fade-up">
                 ♪ Playing sound effects...
               </span>
             </div>
