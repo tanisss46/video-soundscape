@@ -9,15 +9,18 @@ export const useVideoUpload = () => {
     if (!user) throw new Error("User not authenticated");
 
     const fileExt = file.name.split(".").pop();
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+    const timestamp = Date.now();
+    const filePath = `${user.id}/${timestamp}.${fileExt}`;
 
     setIsUploading(true);
+    console.log('Uploading video:', filePath);
 
     try {
       const { error: uploadError, data } = await supabase.storage
         .from("videos")
         .upload(filePath, file, {
           cacheControl: "3600",
+          contentType: 'video/mp4',
           upsert: false,
         });
 
@@ -27,6 +30,7 @@ export const useVideoUpload = () => {
         .from("videos")
         .getPublicUrl(filePath);
 
+      console.log('Video uploaded successfully:', publicUrl);
       return publicUrl;
     } catch (error) {
       console.error("Error uploading video:", error);

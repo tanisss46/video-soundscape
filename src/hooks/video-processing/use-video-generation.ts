@@ -24,15 +24,17 @@ export const useVideoGeneration = () => {
 
   const storeAudioFile = async (audioUrl: string, userId: string) => {
     try {
+      console.log('Fetching audio from:', audioUrl);
       // Download the audio file from the external URL
       const response = await fetch(audioUrl);
       if (!response.ok) throw new Error('Failed to fetch audio file');
       const audioBlob = await response.blob();
 
-      // Generate a unique filename
+      // Generate a unique filename with timestamp and user ID
       const timestamp = Date.now();
       const filename = `${userId}/${timestamp}.mp3`;
 
+      console.log('Uploading audio to Supabase:', filename);
       // Upload to Supabase storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('audio-files')
@@ -49,6 +51,7 @@ export const useVideoGeneration = () => {
         .from('audio-files')
         .getPublicUrl(filename);
 
+      console.log('Audio stored successfully:', publicUrl);
       return publicUrl;
     } catch (error) {
       console.error('Error storing audio file:', error);
@@ -96,6 +99,7 @@ export const useVideoGeneration = () => {
       }),
     };
 
+    console.log('Creating prediction with params:', apiParams);
     const { data: prediction, error: predictionError } = await supabase.functions.invoke("mmaudio", {
       body: {
         action: "create_prediction",
@@ -105,8 +109,9 @@ export const useVideoGeneration = () => {
 
     if (predictionError) throw predictionError;
 
-    // If the prediction includes an audio URL, store it in Supabase
+    // If the prediction includes an audio URL, store it permanently in Supabase
     if (prediction.output) {
+      console.log('Storing audio file permanently...');
       const storedAudioUrl = await storeAudioFile(prediction.output, user.id);
       
       // Update the generation record with the stored audio URL
@@ -119,6 +124,7 @@ export const useVideoGeneration = () => {
         .eq("id", generationId);
 
       if (updateError) throw updateError;
+      console.log('Generation record updated with permanent audio URL');
     }
 
     return prediction;
