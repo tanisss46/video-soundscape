@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VideoPlayerProps {
@@ -16,6 +16,7 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
   const [showControls, setShowControls] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (audioUrl) {
@@ -36,6 +37,26 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
       handlePlay();
     }
   }, [autoPlay]);
+
+  // Monitor video play/pause state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleVideoPlay = () => setIsPlaying(true);
+    const handleVideoPause = () => setIsPlaying(false);
+    const handleVideoEnded = () => setIsPlaying(false);
+
+    video.addEventListener('play', handleVideoPlay);
+    video.addEventListener('pause', handleVideoPause);
+    video.addEventListener('ended', handleVideoEnded);
+
+    return () => {
+      video.removeEventListener('play', handleVideoPlay);
+      video.removeEventListener('pause', handleVideoPause);
+      video.removeEventListener('ended', handleVideoEnded);
+    };
+  }, []);
 
   const handlePlay = async () => {
     if (!videoRef.current) return;
@@ -82,18 +103,21 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
 
   return (
     <div 
+      ref={containerRef}
       className="relative w-full h-full bg-black group"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        className="w-full h-full object-contain"
-        loop
-        muted={!audioUrl}
-        playsInline
-      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className="max-h-full w-full object-contain"
+          loop
+          muted={!audioUrl}
+          playsInline
+        />
+      </div>
       
       <div 
         className={cn(
