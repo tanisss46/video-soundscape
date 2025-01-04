@@ -41,76 +41,60 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
     }
   }, [autoPlay, videoRef.current]);
 
-  // Monitor video events
+  // Sync video and audio state
+  const syncMediaState = async () => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      try {
+        const videoPromise = videoRef.current.play();
+        const promises: Promise<void>[] = [videoPromise];
+        
+        if (audioRef.current && audioUrl) {
+          audioRef.current.currentTime = videoRef.current.currentTime;
+          audioRef.current.volume = volume;
+          const audioPromise = audioRef.current.play();
+          promises.push(audioPromise);
+        }
+        
+        await Promise.all(promises);
+      } catch (error) {
+        console.error("Media sync error:", error);
+        setIsPlaying(false);
+      }
+    } else {
+      videoRef.current.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    }
+  };
+
+  // Monitor video state
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleVideoPlay = () => {
-      setIsPlaying(true);
-    };
-
-    const handleVideoPause = () => {
+    const handleEnded = () => {
       setIsPlaying(false);
+      if (video) video.currentTime = 0;
+      if (audioRef.current) audioRef.current.currentTime = 0;
     };
 
-    const handleVideoEnded = () => {
-      setIsPlaying(false);
-      if (video) {
-        video.currentTime = 0;
-      }
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-      }
-    };
-
-    video.addEventListener('play', handleVideoPlay);
-    video.addEventListener('pause', handleVideoPause);
-    video.addEventListener('ended', handleVideoEnded);
-
+    video.addEventListener('ended', handleEnded);
+    
     return () => {
-      video.removeEventListener('play', handleVideoPlay);
-      video.removeEventListener('pause', handleVideoPause);
-      video.removeEventListener('ended', handleVideoEnded);
+      video.removeEventListener('ended', handleEnded);
     };
   }, []);
 
-  const handlePlay = async () => {
-    if (!videoRef.current) return;
-    
-    try {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        await playPromise;
-        setIsPlaying(true);
-        if (audioRef.current && audioUrl) {
-          audioRef.current.currentTime = videoRef.current.currentTime;
-          audioRef.current.volume = volume;
-          await audioRef.current.play();
-        }
-      }
-    } catch (error) {
-      console.error("Playback error:", error);
-      setIsPlaying(false);
-    }
-  };
-
-  const handlePause = () => {
-    if (!videoRef.current) return;
-    
-    videoRef.current.pause();
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    setIsPlaying(false);
-  };
+  // Sync media whenever isPlaying changes
+  useEffect(() => {
+    syncMediaState();
+  }, [isPlaying]);
 
   const handlePlayPause = () => {
-    if (isPlaying) {
-      handlePause();
-    } else {
-      handlePlay();
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const handleVolumeChange = (value: number[]) => {
