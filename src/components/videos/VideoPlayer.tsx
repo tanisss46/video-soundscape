@@ -37,7 +37,7 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
   useEffect(() => {
     if (autoPlay && !hasAttemptedAutoPlay.current && videoRef.current) {
       hasAttemptedAutoPlay.current = true;
-      handlePlay();
+      setIsPlaying(true); // This will trigger syncMediaState through the effect
     }
   }, [autoPlay, videoRef.current]);
 
