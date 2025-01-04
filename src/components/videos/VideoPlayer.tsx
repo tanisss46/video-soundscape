@@ -11,12 +11,11 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (audioUrl) {
@@ -38,14 +37,22 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
     }
   }, [autoPlay]);
 
-  // Monitor video play/pause state
+  // Monitor video events
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleVideoPlay = () => setIsPlaying(true);
     const handleVideoPause = () => setIsPlaying(false);
-    const handleVideoEnded = () => setIsPlaying(false);
+    const handleVideoEnded = () => {
+      setIsPlaying(false);
+      if (video) {
+        video.currentTime = 0;
+      }
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+    };
 
     video.addEventListener('play', handleVideoPlay);
     video.addEventListener('pause', handleVideoPause);
@@ -103,7 +110,6 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
 
   return (
     <div 
-      ref={containerRef}
       className="relative w-full h-full bg-black group"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
@@ -116,6 +122,8 @@ export function VideoPlayer({ videoUrl, audioUrl, autoPlay = false }: VideoPlaye
           loop
           muted={!audioUrl}
           playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
         />
       </div>
       
