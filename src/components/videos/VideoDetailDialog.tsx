@@ -2,6 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { VideoPlayer } from "./VideoPlayer";
 import { VideoDetails } from "./VideoDetails";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface VideoDetailDialogProps {
   video: {
