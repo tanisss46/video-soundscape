@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { storeMediaFile } from "@/utils/media-storage";
 
 export const useVideoUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -8,30 +9,21 @@ export const useVideoUpload = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
-    const fileExt = file.name.split(".").pop();
-    const timestamp = Date.now();
-    const filePath = `${user.id}/${timestamp}.${fileExt}`;
-
     setIsUploading(true);
-    console.log('Uploading video:', filePath);
+    console.log('Processing video upload...');
 
     try {
-      const { error: uploadError, data } = await supabase.storage
-        .from("videos")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          contentType: 'video/mp4',
-          upsert: false,
-        });
+      // Create a temporary URL for the file
+      const tempUrl = URL.createObjectURL(file);
+      
+      // Store the video permanently in Supabase
+      const permanentUrl = await storeMediaFile(tempUrl, user.id, 'video');
+      
+      // Clean up the temporary URL
+      URL.revokeObjectURL(tempUrl);
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("videos")
-        .getPublicUrl(filePath);
-
-      console.log('Video uploaded successfully:', publicUrl);
-      return publicUrl;
+      console.log('Video uploaded successfully:', permanentUrl);
+      return permanentUrl;
     } catch (error) {
       console.error("Error uploading video:", error);
       throw error;
