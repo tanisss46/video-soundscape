@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { VideoDetailDialog } from "../videos/VideoDetailDialog";
+import { VideoThumbnail } from "../videos/common/VideoThumbnail";
 
 interface VideoCardProps {
   video: {
@@ -15,58 +16,23 @@ interface VideoCardProps {
 export const VideoCard = ({ video }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrl = video.user_generations?.[0]?.audio_url;
 
-  useEffect(() => {
-    if (audioUrl) {
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.load();
-    }
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, [audioUrl]);
-
-  const handleMouseEnter = async () => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
-    if (audioUrl && audioRef.current) {
-      try {
-        audioRef.current.currentTime = 0;
-        await audioRef.current.play();
-      } catch (error) {
-        console.error("Audio playback error:", error);
-      }
-    }
-    if (videoRef.current) {
-      try {
-        await videoRef.current.play();
-      } catch (error) {
-        console.error("Video playback error:", error);
-      }
-    }
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
   };
 
   const handleClick = () => {
     setShowDetail(true);
     handleMouseLeave();
+  };
+
+  const handleLoadError = (error: Error) => {
+    console.error("Media loading error:", error);
   };
 
   return (
@@ -80,14 +46,13 @@ export const VideoCard = ({ video }: VideoCardProps) => {
         onClick={handleClick}
       >
         <CardContent className="p-0 relative">
-          <video 
-            ref={videoRef}
-            src={video.video_url}
-            className="w-full aspect-video object-cover"
-            loop
-            muted
-            playsInline
+          <VideoThumbnail
+            videoUrl={video.video_url}
+            audioUrl={audioUrl}
+            isPlaying={isHovered}
+            onLoadError={handleLoadError}
           />
+          
           <div 
             className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent 
                        opacity-0 group-hover:opacity-100 transition-all duration-300"
