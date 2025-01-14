@@ -2,139 +2,93 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdvancedSettingsValues } from "@/types/video";
+import { toast } from "sonner";
 
 export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const queryClient = useQueryClient();
 
-  const uploadVideo = async (file: File) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
-
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-
-    setIsUploading(true);
-
+  const processVideo = async (file: File, prompt: string, advancedSettings: AdvancedSettingsValues) => {
     try {
-      const { error: uploadError, data } = await supabase.storage
-        .from("videos")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
+      setIsProcessing(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      // Upload to Replicate via Edge Function
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('prompt', prompt);
+      formData.append('duration', advancedSettings.duration.toString());
+      formData.append('seed', advancedSettings.seed.toString());
+      formData.append('numSteps', advancedSettings.numSteps.toString());
+      formData.append('cfgStrength', advancedSettings.cfgStrength.toString());
+      if (advancedSettings.negativePrompt) {
+        formData.append('negativePrompt', advancedSettings.negativePrompt);
+      }
+
+      const { data: processedVideo, error: processError } = await supabase.functions.invoke('mmaudio', {
+        body: formData
+      });
+
+      if (processError) throw processError;
+
+      // Store the final video in Supabase Storage
+      const timestamp = Date.now();
+      const filePath = `${user.id}/${timestamp}.mp4`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(filePath, processedVideo, {
+          contentType: 'video/mp4',
+          cacheControl: '3600',
+          upsert: false
         });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("videos")
+        .from('videos')
         .getPublicUrl(filePath);
 
-      return publicUrl;
-    } catch (error) {
-      console.error("Error uploading video:", error);
-      throw error;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const processVideo = async (file: File, prompt: string, advancedSettings: AdvancedSettingsValues) => {
-    try {
-      setIsProcessing(true);
-      const videoUrl = await uploadVideo(file);
-      if (!videoUrl) throw new Error("Failed to upload video");
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      const { data: video, error: videoError } = await supabase
-        .from("videos")
+      // Create video record
+      const { data: videoData, error: videoError } = await supabase
+        .from('videos')
         .insert({
           user_id: user.id,
-          video_url: videoUrl,
+          video_url: publicUrl,
+          title: file.name.split('.')[0],
         })
         .select()
         .single();
 
       if (videoError) throw videoError;
 
-      // Ensure we always have a prompt value
-      const defaultPrompt = "Generate sound effect based on video content";
-      const finalPrompt = prompt.trim() || defaultPrompt;
-
-      const { data: generation, error: generationError } = await supabase
-        .from("user_generations")
+      // Create generation record
+      const { error: generationError } = await supabase
+        .from('user_generations')
         .insert({
           user_id: user.id,
-          video_id: video.id,
-          prompt: finalPrompt,
-          status: "processing",
-        })
-        .select()
-        .single();
+          video_id: videoData.id,
+          prompt: prompt,
+          status: 'completed',
+          audio_url: publicUrl,
+          duration: advancedSettings.duration
+        });
 
       if (generationError) throw generationError;
 
-      const apiParams = {
-        video_url: videoUrl,
-        seed: advancedSettings.seed,
-        duration: advancedSettings.duration,
-        num_steps: advancedSettings.numSteps,
-        cfg_strength: advancedSettings.cfgStrength,
-        prompt: finalPrompt,
-        ...(advancedSettings.negativePrompt && { 
-          negative_prompt: advancedSettings.negativePrompt 
-        }),
-      };
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      toast.success("Video processed successfully!");
 
-      const { data: prediction, error: predictionError } = await supabase.functions.invoke("mmaudio", {
-        body: {
-          action: "create_prediction",
-          params: apiParams,
-        },
-      });
-
-      if (predictionError) throw predictionError;
-
-      const pollInterval = setInterval(async () => {
-        const { data: status } = await supabase.functions.invoke("mmaudio", {
-          body: {
-            action: "get_prediction",
-            params: { id: prediction.id },
-          },
-        });
-
-        if (status.status === "succeeded") {
-          clearInterval(pollInterval);
-          
-          await supabase
-            .from("user_generations")
-            .update({
-              audio_url: status.output,
-              status: "completed",
-            })
-            .eq("id", generation.id);
-
-          queryClient.invalidateQueries({ queryKey: ['videos'] });
-
-          if (onAfterProcess) {
-            await onAfterProcess();
-          }
-
-          setIsProcessing(false);
-        } else if (status.status === "failed") {
-          clearInterval(pollInterval);
-          setIsProcessing(false);
-          throw new Error("Failed to generate sound effect");
-        }
-      }, 1000);
-
+      if (onAfterProcess) {
+        await onAfterProcess();
+      }
     } catch (error: any) {
       console.error("Error processing video:", error);
-      setIsProcessing(false);
       throw error;
+    } finally {
+      setIsProcessing(false);
     }
   };
 

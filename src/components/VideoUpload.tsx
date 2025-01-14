@@ -4,6 +4,7 @@ import { VideoDropzone } from "./upload/VideoDropzone";
 import { VideoProcessor } from "./upload/VideoProcessor";
 import { AdvancedSettingsValues } from "@/types/video";
 import { useVideoProcessing } from "@/hooks/use-video-processing";
+import { toast } from "sonner";
 
 interface VideoUploadProps {
   onBeforeProcess?: () => Promise<boolean>;
@@ -28,7 +29,24 @@ export const VideoUpload = ({
 
   const { isUploading, isProcessing, processVideo } = useVideoProcessing(onAfterProcess);
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
+    // Check video duration
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+
+    const duration = await new Promise<number>((resolve) => {
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+
+    if (duration > 30) {
+      toast.error("Video must be 30 seconds or shorter");
+      return;
+    }
+
     setSelectedFile(file);
     setVideoUrl(URL.createObjectURL(file));
     if (onFileSelect) {
@@ -107,7 +125,6 @@ export const VideoUpload = ({
 
       if (data.output) {
         setAnalysisResult(data.output);
-        // Update the generation record
         await supabase
           .from('user_generations')
           .update({ 
@@ -122,6 +139,7 @@ export const VideoUpload = ({
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
+      toast.error(error.message || "Failed to analyze video");
       if (currentGenerationId) {
         await supabase
           .from('user_generations')
@@ -148,7 +166,6 @@ export const VideoUpload = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Update existing generation record
       if (currentGenerationId) {
         await supabase
           .from('user_generations')
@@ -164,6 +181,7 @@ export const VideoUpload = ({
       resetUpload();
     } catch (error: any) {
       console.error("Error processing video:", error);
+      toast.error(error.message || "Failed to process video");
       if (currentGenerationId) {
         await supabase
           .from('user_generations')

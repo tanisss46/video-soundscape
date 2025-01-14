@@ -6,82 +6,93 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const formData = await req.formData();
+    const file = formData.get('file');
+    const prompt = formData.get('prompt');
+    const duration = formData.get('duration');
+    const seed = formData.get('seed');
+    const numSteps = formData.get('numSteps');
+    const cfgStrength = formData.get('cfgStrength');
+    const negativePrompt = formData.get('negativePrompt');
+
+    if (!file || !prompt) {
+      throw new Error('File and prompt are required');
+    }
+
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
     if (!replicateApiToken) {
-      throw new Error('REPLICATE_API_TOKEN is not configured in environment variables');
+      throw new Error('REPLICATE_API_TOKEN is not configured');
     }
 
-    const { action, params } = await req.json();
-    console.log('Received request with action:', action, 'and params:', params);
-
-    let response;
-    switch (action) {
-      case 'create_prediction':
-        // Create the input object with only defined parameters
-        const input = {
-          video: params.video_url,
-          prompt: params.prompt || "default sound",
-          seed: params.seed ?? 0,
-          duration: params.duration || 8,
-          num_steps: params.num_steps || 25,
-          cfg_strength: params.cfg_strength || 4.5,
-          ...(params.negative_prompt && { negative_prompt: params.negative_prompt })
-        };
-
-        response = await fetch('https://api.replicate.com/v1/predictions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Token ${replicateApiToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
-            input
-          }),
-        });
-        break;
-
-      case 'get_prediction':
-        response = await fetch(`https://api.replicate.com/v1/predictions/${params.id}`, {
-          headers: {
-            'Authorization': `Token ${replicateApiToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        break;
-
-      case 'cancel_prediction':
-        response = await fetch(`https://api.replicate.com/v1/predictions/${params.id}/cancel`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Token ${replicateApiToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        break;
-
-      default:
-        throw new Error(`Unknown action: ${action}`);
-    }
-
-    console.log('Replicate API response status:', response.status);
-    const result = await response.json();
-    console.log('Replicate API response:', result);
-
-    if (!response.ok) {
-      throw new Error(`Replicate API error: ${JSON.stringify(result)}`);
-    }
-
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Upload to Replicate
+    const response = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${replicateApiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
+        input: {
+          video: file,
+          prompt: prompt,
+          seed: Number(seed) || 0,
+          duration: Number(duration) || 10,
+          num_steps: Number(numSteps) || 25,
+          cfg_strength: Number(cfgStrength) || 4.5,
+          ...(negativePrompt && { negative_prompt: negativePrompt })
+        }
+      }),
     });
 
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to process video');
+    }
+
+    const result = await response.json();
+    
+    // Poll for completion
+    let status = result.status;
+    while (status === 'starting' || status === 'processing') {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+        headers: {
+          'Authorization': `Token ${replicateApiToken}`,
+        },
+      });
+      
+      if (!statusResponse.ok) {
+        throw new Error('Failed to check processing status');
+      }
+      
+      const statusResult = await statusResponse.json();
+      status = statusResult.status;
+      
+      if (status === 'succeeded') {
+        // Download the processed video
+        const videoResponse = await fetch(statusResult.output);
+        if (!videoResponse.ok) {
+          throw new Error('Failed to download processed video');
+        }
+        
+        return new Response(await videoResponse.blob(), {
+          headers: { ...corsHeaders, 'Content-Type': 'video/mp4' },
+        });
+      }
+      
+      if (status === 'failed') {
+        throw new Error('Video processing failed');
+      }
+    }
+
+    throw new Error('Unexpected processing status');
   } catch (error) {
     console.error('Error in mmaudio function:', error);
     return new Response(
