@@ -22,7 +22,6 @@ export const VideoUpload = ({
   onAnalyzeComplete
 }: VideoUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string>("");
   const [currentGenerationId, setCurrentGenerationId] = useState<number | null>(null);
@@ -48,7 +47,6 @@ export const VideoUpload = ({
     }
 
     setSelectedFile(file);
-    setVideoUrl(URL.createObjectURL(file));
     if (onFileSelect) {
       onFileSelect();
     }
@@ -56,7 +54,6 @@ export const VideoUpload = ({
 
   const resetUpload = () => {
     setSelectedFile(null);
-    setVideoUrl(null);
     setAnalysisResult("");
     setCurrentGenerationId(null);
   };
@@ -73,52 +70,25 @@ export const VideoUpload = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      const timestamp = Date.now();
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `temp_${timestamp}.${fileExt}`;
+      // Create generation record
+      const { data: generationData, error: generationError } = await supabase
+        .from('user_generations')
+        .insert({
+          prompt: 'Analyzing video content...',
+          status: 'analyzing',
+          user_id: user.id
+        })
+        .select()
+        .single();
 
-      // Create or update generation record
-      let generationId = currentGenerationId;
-      if (!generationId) {
-        const { data: generationData, error: generationError } = await supabase
-          .from('user_generations')
-          .insert({
-            prompt: 'Analyzing video content...',
-            status: 'analyzing',
-            video_url: videoUrl,
-            user_id: user.id
-          })
-          .select()
-          .single();
+      if (generationError) throw generationError;
+      setCurrentGenerationId(generationData.id);
 
-        if (generationError) throw generationError;
-        generationId = generationData.id;
-        setCurrentGenerationId(generationId);
-      } else {
-        await supabase
-          .from('user_generations')
-          .update({
-            status: 'analyzing',
-            prompt: 'Analyzing video content...'
-          })
-          .eq('id', generationId);
-      }
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(fileName, selectedFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(fileName);
+      const formData = new FormData();
+      formData.append('file', selectedFile);
 
       const { data, error } = await supabase.functions.invoke('analyze-video', {
-        body: { videoUrl: publicUrl }
+        body: { file: selectedFile }
       });
 
       if (error) throw error;
@@ -131,7 +101,7 @@ export const VideoUpload = ({
             status: 'analyzed',
             prompt: data.output
           })
-          .eq('id', generationId);
+          .eq('id', generationData.id);
 
         if (onAnalyzeComplete) {
           onAnalyzeComplete();
@@ -198,7 +168,6 @@ export const VideoUpload = ({
     <div className="space-y-6">
       <VideoDropzone
         selectedFile={selectedFile}
-        videoUrl={videoUrl}
         onFileSelect={handleFileSelect}
         onReset={resetUpload}
       />

@@ -15,7 +15,7 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Upload to Replicate via Edge Function
+      // Send directly to Edge Function
       const formData = new FormData();
       formData.append('file', file);
       formData.append('prompt', prompt);
@@ -33,30 +33,12 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
 
       if (processError) throw processError;
 
-      // Store the final video in Supabase Storage
-      const timestamp = Date.now();
-      const filePath = `${user.id}/${timestamp}.mp4`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(filePath, processedVideo, {
-          contentType: 'video/mp4',
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(filePath);
-
-      // Create video record
+      // Create video record with the final video URL
       const { data: videoData, error: videoError } = await supabase
         .from('videos')
         .insert({
           user_id: user.id,
-          video_url: publicUrl,
+          video_url: processedVideo.videoUrl,
           title: file.name.split('.')[0],
         })
         .select()
@@ -72,7 +54,7 @@ export const useVideoProcessing = (onAfterProcess?: () => Promise<void>) => {
           video_id: videoData.id,
           prompt: prompt,
           status: 'completed',
-          audio_url: publicUrl,
+          audio_url: processedVideo.videoUrl,
           duration: advancedSettings.duration
         });
 

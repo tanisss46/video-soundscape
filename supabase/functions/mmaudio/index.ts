@@ -29,7 +29,7 @@ serve(async (req) => {
       throw new Error('REPLICATE_API_TOKEN is not configured');
     }
 
-    // Upload to Replicate
+    // Create prediction with Replicate
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -55,44 +55,91 @@ serve(async (req) => {
       throw new Error(error.detail || 'Failed to process video');
     }
 
-    const result = await response.json();
-    
+    const prediction = await response.json();
+    console.log('Prediction created:', prediction);
+
     // Poll for completion
-    let status = result.status;
-    while (status === 'starting' || status === 'processing') {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    const maxAttempts = 180; // 3 minutes
+    const pollInterval = 2000; // 2 seconds
+    let attempts = 0;
+    let result = prediction;
+
+    while (attempts < maxAttempts && result.status !== "succeeded" && result.status !== "failed") {
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
       
-      const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
           'Authorization': `Token ${replicateApiToken}`,
         },
       });
-      
-      if (!statusResponse.ok) {
-        throw new Error('Failed to check processing status');
+
+      if (!pollResponse.ok) {
+        throw new Error('Failed to check prediction status');
       }
       
-      const statusResult = await statusResponse.json();
-      status = statusResult.status;
+      result = await pollResponse.json();
+      console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status = ${result.status}`);
       
-      if (status === 'succeeded') {
-        // Download the processed video
-        const videoResponse = await fetch(statusResult.output);
-        if (!videoResponse.ok) {
-          throw new Error('Failed to download processed video');
-        }
-        
-        return new Response(await videoResponse.blob(), {
-          headers: { ...corsHeaders, 'Content-Type': 'video/mp4' },
-        });
+      if (result.status === "failed") {
+        throw new Error(result.error || "Model processing failed");
       }
       
-      if (status === 'failed') {
-        throw new Error('Video processing failed');
-      }
+      attempts++;
     }
 
-    throw new Error('Unexpected processing status');
+    if (result.status !== "succeeded") {
+      throw new Error(`Processing timeout after ${maxAttempts * (pollInterval/1000)} seconds`);
+    }
+
+    // Download the final video from Replicate
+    const videoResponse = await fetch(result.output);
+    if (!videoResponse.ok) {
+      throw new Error('Failed to download processed video');
+    }
+
+    const videoBlob = await videoResponse.blob();
+    
+    // Get Supabase credentials from environment
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase credentials not configured');
+    }
+
+    // Create Supabase client
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Upload to Supabase Storage
+    const timestamp = Date.now();
+    const fileName = `${timestamp}.mp4`;
+    
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from('videos')
+      .upload(fileName, videoBlob, {
+        contentType: 'video/mp4',
+        cacheControl: '3600',
+      });
+
+    if (uploadError) {
+      throw new Error(`Failed to upload to Supabase: ${uploadError.message}`);
+    }
+
+    // Get the public URL
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('videos')
+      .getPublicUrl(fileName);
+
+    return new Response(
+      JSON.stringify({ 
+        status: 'success',
+        videoUrl: publicUrl
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+
   } catch (error) {
     console.error('Error in mmaudio function:', error);
     return new Response(
