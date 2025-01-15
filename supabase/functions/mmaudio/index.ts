@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,16 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const formData = await req.formData();
     const file = formData.get('file');
     const prompt = formData.get('prompt');
@@ -92,6 +103,7 @@ serve(async (req) => {
     }
 
     // Download the final video from Replicate
+    console.log('Downloading final video from Replicate:', result.output);
     const videoResponse = await fetch(result.output);
     if (!videoResponse.ok) {
       throw new Error('Failed to download processed video');
@@ -99,22 +111,12 @@ serve(async (req) => {
 
     const videoBlob = await videoResponse.blob();
     
-    // Get Supabase credentials from environment
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase credentials not configured');
-    }
-
-    // Create Supabase client
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
     // Upload to Supabase Storage
     const timestamp = Date.now();
     const fileName = `${timestamp}.mp4`;
     
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+    console.log('Uploading video to Supabase Storage:', fileName);
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('videos')
       .upload(fileName, videoBlob, {
         contentType: 'video/mp4',
@@ -122,13 +124,16 @@ serve(async (req) => {
       });
 
     if (uploadError) {
+      console.error('Failed to upload to Supabase:', uploadError);
       throw new Error(`Failed to upload to Supabase: ${uploadError.message}`);
     }
 
     // Get the public URL
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = supabase.storage
       .from('videos')
       .getPublicUrl(fileName);
+
+    console.log('Video successfully processed and uploaded:', publicUrl);
 
     return new Response(
       JSON.stringify({ 
