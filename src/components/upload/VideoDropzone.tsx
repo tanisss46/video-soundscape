@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface VideoDropzoneProps {
   selectedFile: File | null;
-  videoUrl: string | null;
+  videoUrl?: string | null; // Made optional with ?
   onFileSelect: (file: File) => void;
   onReset: () => void;
 }
@@ -71,11 +71,13 @@ export const VideoDropzone = ({
       <input {...getInputProps()} />
       {selectedFile ? (
         <div className="space-y-4">
-          <video
-            src={videoUrl!}
-            className="max-h-[400px] mx-auto rounded-lg"
-            controls
-          />
+          {videoUrl && (
+            <video
+              src={videoUrl}
+              className="max-h-[400px] mx-auto rounded-lg"
+              controls
+            />
+          )}
           <Button
             variant="ghost"
             size="icon"
