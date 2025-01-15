@@ -23,16 +23,27 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const formData = await req.formData();
+    console.log("Received form data keys:", [...formData.keys()]);
+    
     const file = formData.get('file');
-    const prompt = formData.get('prompt');
+    const prompt = formData.get('prompt') || '';
     const duration = formData.get('duration');
     const seed = formData.get('seed');
     const numSteps = formData.get('numSteps');
     const cfgStrength = formData.get('cfgStrength');
     const negativePrompt = formData.get('negativePrompt');
 
-    if (!file || !prompt) {
-      throw new Error('File and prompt are required');
+    console.log("Received file:", file ? "yes" : "no");
+    console.log("Received prompt:", prompt);
+
+    if (!file) {
+      return new Response(
+        JSON.stringify({ error: 'File is required' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
     }
 
     const replicateApiToken = Deno.env.get('REPLICATE_API_TOKEN');
@@ -51,7 +62,7 @@ serve(async (req) => {
         version: "4b9f801a167b1f6cc2db6ba7ffdeb307630bf411841d4e8300e63ca992de0be9",
         input: {
           video: file,
-          prompt: prompt,
+          prompt: prompt || "ambient sound matching the video content",
           seed: Number(seed) || 0,
           duration: Number(duration) || 10,
           num_steps: Number(numSteps) || 25,
@@ -63,6 +74,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.json();
+      console.error("Replicate API error:", error);
       throw new Error(error.detail || 'Failed to process video');
     }
 
