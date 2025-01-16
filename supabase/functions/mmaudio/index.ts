@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -93,7 +92,7 @@ serve(async (req) => {
           num_steps: Number(numSteps) || 25,
           cfg_strength: Number(cfgStrength) || 4.5,
           ...(negativePrompt && { negative_prompt: negativePrompt })
-        }
+        },
       }),
     });
 
@@ -146,7 +145,9 @@ serve(async (req) => {
       throw new Error('Failed to download processed video');
     }
 
+    // Explicitly get the video as a blob with video/mp4 type
     const processedVideoBlob = await processedVideoResponse.blob();
+    const videoBlob = new Blob([processedVideoBlob], { type: 'video/mp4' });
     
     // 5. Upload the processed video to Supabase Storage
     const processedFileName = `processed_${timestamp}.mp4`;
@@ -154,9 +155,10 @@ serve(async (req) => {
     
     const { data: processedUploadData, error: processedUploadError } = await supabase.storage
       .from('videos')
-      .upload(processedFileName, processedVideoBlob, {
+      .upload(processedFileName, videoBlob, {
         contentType: 'video/mp4',
         cacheControl: '3600',
+        upsert: false
       });
 
     if (processedUploadError) {
