@@ -87,8 +87,9 @@ export const VideoUpload = ({
       const formData = new FormData();
       formData.append('file', selectedFile);
 
+      // Update to use invoke with proper function name
       const { data, error } = await supabase.functions.invoke('analyze-video', {
-        body: { file: selectedFile }
+        body: formData
       });
 
       if (error) throw error;
@@ -147,6 +148,19 @@ export const VideoUpload = ({
           .eq('id', currentGenerationId);
       }
 
+      // Create FormData with all required fields
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('prompt', prompt);
+      formData.append('duration', advancedSettings.duration.toString());
+      formData.append('seed', advancedSettings.seed.toString());
+      formData.append('numSteps', advancedSettings.numSteps.toString());
+      formData.append('cfgStrength', advancedSettings.cfgStrength.toString());
+      if (advancedSettings.negativePrompt) {
+        formData.append('negativePrompt', advancedSettings.negativePrompt);
+      }
+
+      // Update to use invoke with proper function name and formData
       await processVideo(selectedFile, prompt, advancedSettings);
       resetUpload();
     } catch (error: any) {
