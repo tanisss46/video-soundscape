@@ -38,16 +38,16 @@ export function VideoDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         className={cn(
-          "max-w-[70vw] lg:max-w-[1200px] h-[80vh] p-0 gap-0 bg-[#1B1B1B] text-[#E0E0E0]",
+          "max-w-[90vw] lg:max-w-[80vw] max-h-[90vh] p-0 gap-0 bg-[#1B1B1B] text-[#E0E0E0]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
           "data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2",
-          "shadow-lg shadow-black/20"
+          "shadow-lg shadow-black/20 overflow-hidden"
         )}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr,2fr] h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr,2fr] h-full max-h-[90vh]">
           {/* Video Section */}
-          <div className="relative h-full bg-black flex items-center justify-center">
+          <div className="relative bg-black flex items-center justify-center max-h-[50vh] lg:max-h-[90vh]">
             <VideoPlayer 
               videoUrl={video.video_url} 
               audioUrl={audioUrl} 
@@ -56,7 +56,7 @@ export function VideoDetailDialog({
           </div>
 
           {/* Details Section */}
-          <div className="relative h-full border-l border-white/10 overflow-y-auto">
+          <div className="relative border-l border-white/10 overflow-y-auto max-h-[40vh] lg:max-h-[90vh]">
             <div className="p-6">
               <VideoDetails
                 title={video.title}
