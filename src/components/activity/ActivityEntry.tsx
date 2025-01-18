@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ActivityBadge } from "./ActivityBadge";
 import { VideoDetailDialog } from "../videos/VideoDetailDialog";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface ActivityEntryProps {
   id: number;
@@ -122,10 +123,13 @@ export const ActivityEntry = ({
         <VideoDetailDialog
           video={{
             id: id.toString(),
-            video_url,
-            audio_url,
             title: `Process #${id}`,
+            video_url,
             created_at: new Date().toISOString(),
+            user_generations: [{
+              prompt,
+              audio_url
+            }]
           }}
           open={showVideoDialog}
           onOpenChange={setShowVideoDialog}
