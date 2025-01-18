@@ -59,19 +59,28 @@ export const ActivityEntry = ({
       <div 
         className={cn(
           "p-3 rounded-lg border bg-card",
-          status === 'completed' && "cursor-pointer hover:bg-accent/50 transition-colors"
+          (status === 'completed' && video_url) && "cursor-pointer hover:bg-accent/50 transition-colors"
         )}
         onClick={handleEntryClick}
       >
         <div className="flex items-start justify-between gap-2">
-          {video_url && (
-            <div className="w-16 h-16 rounded overflow-hidden">
+          <div className="w-16 h-16 rounded overflow-hidden bg-muted">
+            {video_url ? (
               <video
                 src={video_url}
                 className="w-full h-full object-cover"
+                poster="/placeholder.svg"
               />
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <img 
+                  src="/placeholder.svg" 
+                  alt="Video placeholder"
+                  className="w-8 h-8 opacity-50"
+                />
+              </div>
+            )}
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
               <span className="text-sm font-medium truncate">
